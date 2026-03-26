@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商城管理系统 - 订单管理</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            background-color: #f5f7fa;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding-top: 20px;
+            z-index: 1000;
+        }
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 20px;
+        }
+        .sidebar-header h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .nav-menu li {
+            margin-bottom: 5px;
+        }
+        .nav-menu li a {
+            display: block;
+            padding: 15px 25px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        .nav-menu li a:hover,
+        .nav-menu li.active a {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: #ffd700;
+        }
+        .nav-menu li a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .main-content {
+            margin-left: 250px;
+            min-height: 100vh;
+        }
+        .top-navbar {
+            background: white;
+            height: 70px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .page-content {
+            padding: 30px;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #eee;
+            padding: 20px;
+            border-radius: 12px 12px 0 0 !important;
+        }
+        .search-form .form-control,
+        .search-form .btn {
+            height: 42px;
+            border-radius: 8px;
+        }
+        .table th,
+        .table td {
+            vertical-align: middle;
+            padding: 15px;
+        }
+        .table th {
+            background: #f8f9fa;
+            border-top: none;
+            font-weight: 600;
+            color: #666;
+        }
+        .table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        .badge {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .btn {
+            border-radius: 6px;
+            padding: 6px 15px;
+        }
+        .modal-content {
+            border-radius: 12px;
+            border: none;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+        .modal-header .close {
+            color: white;
+            opacity: 0.8;
+        }
+        .order-detail-row {
+            background: #f8f9fa;
+        }
+        .order-detail-content {
+            padding: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3><i class="fa fa-shopping-cart"></i> 商城管理</h3>
+        </div>
+        <ul class="nav-menu">
+            <li>
+                <a href="/mall/dashboard"><i class="fa fa-dashboard"></i> 仪表盘</a>
+            </li>
+            <li>
+                <a href="/mall/user"><i class="fa fa-users"></i> 用户管理</a>
+            </li>
+            <li>
+                <a href="/mall/product"><i class="fa fa-cubes"></i> 商品管理</a>
+            </li>
+            <li class="active">
+                <a href="/mall/order"><i class="fa fa-shopping-bag"></i> 订单管理</a>
+            </li>
+            <li>
+                <a href="/mall/bill"><i class="fa fa-file-text"></i> 账单管理</a>
+            </li>
+            <li>
+                <a href="/mall/logistics"><i class="fa fa-truck"></i> 物流管理</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="top-navbar">
+            <h4 class="mb-0">欢迎使用商城管理系统</h4>
+            <div class="user-info">
+                <span>管理员</span>
+                <div class="user-avatar">A</div>
+                <a href="/mall/logout" class="btn btn-outline-danger btn-sm">
+                    <i class="fa fa-sign-out"></i> 退出
+                </a>
+            </div>
+        </div>
+
+        <div class="page-content">
+            <div class="page-header">
+                <h1 class="page-title"><i class="fa fa-shopping-bag"></i> 订单管理</h1>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <form class="form-inline search-form" id="searchForm">
+                        <div class="form-group mr-3">
+                            <input type="text" class="form-control" id="searchOrderNo" placeholder="订单编号">
+                        </div>
+                        <div class="form-group mr-3">
+                            <input type="text" class="form-control" id="searchUsername" placeholder="用户名称">
+                        </div>
+                        <div class="form-group mr-3">
+                            <select class="form-control" id="searchStatus">
+                                <option value="">全部状态</option>
+                                <option value="1">待付款</option>
+                                <option value="2">待发货</option>
+                                <option value="3">已发货</option>
+                                <option value="4">已完成</option>
+                                <option value="5">已关闭</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary mr-2">
+                            <i class="fa fa-search"></i> 搜索
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetSearch()">
+                            <i class="fa fa-refresh"></i> 重置
+                        </button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>订单编号</th>
+                                <th>用户名称</th>
+                                <th>总金额</th>
+                                <th>实付金额</th>
+                                <th>订单状态</th>
+                                <th>收货人</th>
+                                <th>联系电话</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 订单详情模态框 -->
+    <div class="modal fade" id="detailModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fa fa-file-text-o"></i> 订单详情</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="orderDetailContent">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(function() {
+            loadOrderList();
+            
+            $('#searchForm').on('submit', function(e) {
+                e.preventDefault();
+                loadOrderList();
+            });
+        });
+
+        function loadOrderList() {
+            var orderNo = $('#searchOrderNo').val();
+            var username = $('#searchUsername').val();
+            var orderStatus = $('#searchStatus').val();
+            
+            $.ajax({
+                url: '/mall/order/list',
+                type: 'GET',
+                data: {
+                    orderNo: orderNo,
+                    username: username,
+                    orderStatus: orderStatus
+                },
+                success: function(res) {
+                    if (res.code === 200) {
+                        renderOrderTable(res.data);
+                    }
+                }
+            });
+        }
+
+        function renderOrderTable(orders) {
+            var html = '';
+            if (orders && orders.length > 0) {
+                orders.forEach(function(order) {
+                    html += '<tr>';
+                    html += '<td>' + order.orderNo + '</td>';
+                    html += '<td>' + (order.username || '-') + '</td>';
+                    html += '<td>¥' + order.totalAmount + '</td>';
+                    html += '<td>¥' + order.payAmount + '</td>';
+                    html += '<td>' + getOrderStatusText(order.orderStatus) + '</td>';
+                    html += '<td>' + order.consignee + '</td>';
+                    html += '<td>' + order.phone + '</td>';
+                    html += '<td>' + formatDate(order.createTime) + '</td>';
+                    html += '<td>';
+                    html += '<button class="btn btn-sm btn-info mr-1" onclick="viewDetail(' + order.id + ')"><i class="fa fa-eye"></i></button>';
+                    if (order.orderStatus != 5) {
+                        html += '<button class="btn btn-sm btn-warning mr-1" onclick="closeOrder(' + order.id + ')"><i class="fa fa-times"></i> 关闭</button>';
+                    }
+                    html += '<button class="btn btn-sm btn-danger" onclick="deleteOrder(' + order.id + ')"><i class="fa fa-trash"></i></button>';
+                    html += '</td>';
+                    html += '</tr>';
+                });
+            } else {
+                html = '<tr><td colspan="9" class="text-center text-muted py-5">暂无数据</td></tr>';
+            }
+            $('#orderTableBody').html(html);
+        }
+
+        function getOrderStatusText(status) {
+            var statusMap = {
+                1: '<span class="badge badge-warning">待付款</span>',
+                2: '<span class="badge badge-info">待发货</span>',
+                3: '<span class="badge badge-primary">已发货</span>',
+                4: '<span class="badge badge-success">已完成</span>',
+                5: '<span class="badge badge-danger">已关闭</span>'
+            };
+            return statusMap[status] || '-';
+        }
+
+        function viewDetail(id) {
+            $.ajax({
+                url: '/mall/order/' + id,
+                type: 'GET',
+                success: function(res) {
+                    if (res.code === 200) {
+                        renderOrderDetail(res.data);
+                        $('#detailModal').modal('show');
+                    }
+                }
+            });
+        }
+
+        function renderOrderDetail(order) {
+            var html = '<div class="row">';
+            html += '<div class="col-md-6">';
+            html += '<p><strong>订单编号：</strong>' + order.orderNo + '</p>';
+            html += '<p><strong>用户名称：</strong>' + (order.username || '-') + '</p>';
+            html += '<p><strong>总金额：</strong>¥' + order.totalAmount + '</p>';
+            html += '<p><strong>实付金额：</strong>¥' + order.payAmount + '</p>';
+            html += '<p><strong>支付方式：</strong>' + (order.payType == 1 ? '微信支付' : order.payType == 2 ? '支付宝' : '-') + '</p>';
+            html += '</div>';
+            html += '<div class="col-md-6">';
+            html += '<p><strong>订单状态：</strong>' + getOrderStatusText(order.orderStatus).replace(/<[^>]+>/g, '') + '</p>';
+            html += '<p><strong>收货人：</strong>' + order.consignee + '</p>';
+            html += '<p><strong>联系电话：</strong>' + order.phone + '</p>';
+            html += '<p><strong>收货地址：</strong>' + order.address + '</p>';
+            html += '<p><strong>创建时间：</strong>' + formatDate(order.createTime) + '</p>';
+            html += '</div>';
+            html += '</div>';
+            html += '<hr>';
+            html += '<h5>订单商品</h5>';
+            html += '<table class="table table-bordered">';
+            html += '<thead><tr><th>商品名称</th><th>单价</th><th>数量</th><th>小计</th></tr></thead>';
+            html += '<tbody>';
+            if (order.orderItems && order.orderItems.length > 0) {
+                order.orderItems.forEach(function(item) {
+                    html += '<tr>';
+                    html += '<td>' + item.productName + '</td>';
+                    html += '<td>¥' + item.price + '</td>';
+                    html += '<td>' + item.quantity + '</td>';
+                    html += '<td>¥' + item.totalAmount + '</td>';
+                    html += '</tr>';
+                });
+            }
+            html += '</tbody></table>';
+            $('#orderDetailContent').html(html);
+        }
+
+        function closeOrder(id) {
+            if (confirm('确定要关闭该订单吗？')) {
+                $.ajax({
+                    url: '/mall/order/' + id + '/close',
+                    type: 'PUT',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            alert('订单关闭成功');
+                            loadOrderList();
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            }
+        }
+
+        function deleteOrder(id) {
+            if (confirm('确定要删除该订单吗？')) {
+                $.ajax({
+                    url: '/mall/order/' + id,
+                    type: 'DELETE',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            alert('删除成功');
+                            loadOrderList();
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            }
+        }
+
+        function resetSearch() {
+            $('#searchOrderNo').val('');
+            $('#searchUsername').val('');
+            $('#searchStatus').val('');
+            loadOrderList();
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            var date = new Date(dateStr);
+            return date.toLocaleString('zh-CN', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    </script>
+    
+    <!-- 引入jQuery和Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

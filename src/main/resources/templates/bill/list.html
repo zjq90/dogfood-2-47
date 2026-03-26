@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商城管理系统 - 账单管理</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            background-color: #f5f7fa;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding-top: 20px;
+            z-index: 1000;
+        }
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 20px;
+        }
+        .sidebar-header h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .nav-menu li {
+            margin-bottom: 5px;
+        }
+        .nav-menu li a {
+            display: block;
+            padding: 15px 25px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        .nav-menu li a:hover,
+        .nav-menu li.active a {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: #ffd700;
+        }
+        .nav-menu li a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .main-content {
+            margin-left: 250px;
+            min-height: 100vh;
+        }
+        .top-navbar {
+            background: white;
+            height: 70px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .page-content {
+            padding: 30px;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #eee;
+            padding: 20px;
+            border-radius: 12px 12px 0 0 !important;
+        }
+        .search-form .form-control,
+        .search-form .btn {
+            height: 42px;
+            border-radius: 8px;
+        }
+        .table th,
+        .table td {
+            vertical-align: middle;
+            padding: 15px;
+        }
+        .table th {
+            background: #f8f9fa;
+            border-top: none;
+            font-weight: 600;
+            color: #666;
+        }
+        .table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        .badge {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .btn {
+            border-radius: 6px;
+            padding: 6px 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3><i class="fa fa-shopping-cart"></i> 商城管理</h3>
+        </div>
+        <ul class="nav-menu">
+            <li>
+                <a href="/mall/dashboard"><i class="fa fa-dashboard"></i> 仪表盘</a>
+            </li>
+            <li>
+                <a href="/mall/user"><i class="fa fa-users"></i> 用户管理</a>
+            </li>
+            <li>
+                <a href="/mall/product"><i class="fa fa-cubes"></i> 商品管理</a>
+            </li>
+            <li>
+                <a href="/mall/order"><i class="fa fa-shopping-bag"></i> 订单管理</a>
+            </li>
+            <li class="active">
+                <a href="/mall/bill"><i class="fa fa-file-text"></i> 账单管理</a>
+            </li>
+            <li>
+                <a href="/mall/logistics"><i class="fa fa-truck"></i> 物流管理</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="top-navbar">
+            <h4 class="mb-0">欢迎使用商城管理系统</h4>
+            <div class="user-info">
+                <span>管理员</span>
+                <div class="user-avatar">A</div>
+                <a href="/mall/logout" class="btn btn-outline-danger btn-sm">
+                    <i class="fa fa-sign-out"></i> 退出
+                </a>
+            </div>
+        </div>
+
+        <div class="page-content">
+            <div class="page-header">
+                <h1 class="page-title"><i class="fa fa-file-text"></i> 账单管理</h1>
+                <button type="button" class="btn btn-success" onclick="exportBill()">
+                    <i class="fa fa-download"></i> 导出Excel
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <form class="form-inline search-form" id="searchForm">
+                        <div class="form-group mr-3">
+                            <input type="text" class="form-control" id="searchBillNo" placeholder="账单编号">
+                        </div>
+                        <div class="form-group mr-3">
+                            <input type="text" class="form-control" id="searchOrderNo" placeholder="订单编号">
+                        </div>
+                        <div class="form-group mr-3">
+                            <select class="form-control" id="searchType">
+                                <option value="">全部类型</option>
+                                <option value="1">收入</option>
+                                <option value="2">支出</option>
+                            </select>
+                        </div>
+                        <div class="form-group mr-3">
+                            <select class="form-control" id="searchStatus">
+                                <option value="">全部状态</option>
+                                <option value="1">已确认</option>
+                                <option value="2">待确认</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary mr-2">
+                            <i class="fa fa-search"></i> 搜索
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetSearch()">
+                            <i class="fa fa-refresh"></i> 重置
+                        </button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>账单编号</th>
+                                <th>订单编号</th>
+                                <th>用户名称</th>
+                                <th>账单金额</th>
+                                <th>账单类型</th>
+                                <th>账单状态</th>
+                                <th>备注</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="billTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(function() {
+            loadBillList();
+            
+            $('#searchForm').on('submit', function(e) {
+                e.preventDefault();
+                loadBillList();
+            });
+        });
+
+        function loadBillList() {
+            var billNo = $('#searchBillNo').val();
+            var orderNo = $('#searchOrderNo').val();
+            var billType = $('#searchType').val();
+            var billStatus = $('#searchStatus').val();
+            
+            $.ajax({
+                url: '/mall/bill/list',
+                type: 'GET',
+                data: {
+                    billNo: billNo,
+                    orderNo: orderNo,
+                    billType: billType,
+                    billStatus: billStatus
+                },
+                success: function(res) {
+                    if (res.code === 200) {
+                        renderBillTable(res.data);
+                    }
+                }
+            });
+        }
+
+        function renderBillTable(bills) {
+            var html = '';
+            if (bills && bills.length > 0) {
+                bills.forEach(function(bill) {
+                    html += '<tr>';
+                    html += '<td>' + bill.billNo + '</td>';
+                    html += '<td>' + bill.orderNo + '</td>';
+                    html += '<td>' + (bill.username || '-') + '</td>';
+                    html += '<td>¥' + bill.amount + '</td>';
+                    html += '<td>';
+                    html += bill.billType === 1 ? 
+                        '<span class="badge badge-success">收入</span>' : 
+                        '<span class="badge badge-danger">支出</span>';
+                    html += '</td>';
+                    html += '<td>';
+                    html += bill.billStatus === 1 ? 
+                        '<span class="badge badge-success">已确认</span>' : 
+                        '<span class="badge badge-warning">待确认</span>';
+                    html += '</td>';
+                    html += '<td>' + (bill.remark || '-') + '</td>';
+                    html += '<td>' + formatDate(bill.createTime) + '</td>';
+                    html += '<td>';
+                    html += '<button class="btn btn-sm btn-danger" onclick="deleteBill(' + bill.id + ')"><i class="fa fa-trash"></i></button>';
+                    html += '</td>';
+                    html += '</tr>';
+                });
+            } else {
+                html = '<tr><td colspan="9" class="text-center text-muted py-5">暂无数据</td></tr>';
+            }
+            $('#billTableBody').html(html);
+        }
+
+        function exportBill() {
+            var billNo = $('#searchBillNo').val();
+            var orderNo = $('#searchOrderNo').val();
+            var billType = $('#searchType').val();
+            var billStatus = $('#searchStatus').val();
+            
+            var url = '/mall/bill/export?';
+            if (billNo) url += 'billNo=' + billNo + '&';
+            if (orderNo) url += 'orderNo=' + orderNo + '&';
+            if (billType) url += 'billType=' + billType + '&';
+            if (billStatus) url += 'billStatus=' + billStatus;
+            
+            window.location.href = url;
+        }
+
+        function deleteBill(id) {
+            if (confirm('确定要删除该账单吗？')) {
+                $.ajax({
+                    url: '/mall/bill/' + id,
+                    type: 'DELETE',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            alert('删除成功');
+                            loadBillList();
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            }
+        }
+
+        function resetSearch() {
+            $('#searchBillNo').val('');
+            $('#searchOrderNo').val('');
+            $('#searchType').val('');
+            $('#searchStatus').val('');
+            loadBillList();
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            var date = new Date(dateStr);
+            return date.toLocaleString('zh-CN', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    </script>
+    
+    <!-- 引入jQuery和Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
