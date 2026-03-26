@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商城管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f5f7fa;
+        }
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
+            padding-top: 20px;
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-header h4 {
+            color: #fff;
+            margin: 0;
+            font-weight: 600;
+        }
+        .sidebar-header p {
+            color: rgba(255,255,255,0.6);
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .nav-menu {
+            padding: 20px 0;
+        }
+        .nav-item {
+            padding: 0;
+        }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border-left-color: #3498db;
+        }
+        .nav-link i {
+            margin-right: 15px;
+            font-size: 18px;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .top-bar {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .user-info span {
+            margin-right: 15px;
+            color: #666;
+        }
+        .content-area {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .page-header {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .page-header h5 {
+            margin: 0;
+            color: #333;
+            font-weight: 600;
+        }
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            transition: transform 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            font-size: 24px;
+            color: white;
+        }
+        .stat-icon.bg-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stat-icon.bg-success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .stat-icon.bg-warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stat-icon.bg-info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .stat-info h3 {
+            margin: 0;
+            font-size: 28px;
+            color: #333;
+        }
+        .stat-info p {
+            margin: 5px 0 0;
+            color: #999;
+            font-size: 14px;
+        }
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table thead th {
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            color: #666;
+            font-weight: 600;
+            padding: 15px;
+        }
+        .table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+        }
+        .btn-action {
+            padding: 5px 10px;
+            font-size: 12px;
+            margin: 0 2px;
+        }
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-inactive { background: #f8d7da; color: #721c24; }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+        .form-label {
+            font-weight: 500;
+            color: #333;
+        }
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .search-bar .form-control {
+            max-width: 200px;
+        }
+        .product-img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h4><i class="bi bi-shop"></i> 商城管理系统</h4>
+            <p>Mall Management System</p>
+        </div>
+        <nav class="nav-menu">
+            <div class="nav-item">
+                <a href="/index" class="nav-link active" data-page="dashboard">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>控制台</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="javascript:;" class="nav-link" data-page="user">
+                    <i class="bi bi-people"></i>
+                    <span>用户管理</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="javascript:;" class="nav-link" data-page="product">
+                    <i class="bi bi-box-seam"></i>
+                    <span>商品管理</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="javascript:;" class="nav-link" data-page="orders">
+                    <i class="bi bi-receipt"></i>
+                    <span>订单管理</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="javascript:;" class="nav-link" data-page="bill">
+                    <i class="bi bi-cash-stack"></i>
+                    <span>账单管理</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="javascript:;" class="nav-link" data-page="logistics">
+                    <i class="bi bi-truck"></i>
+                    <span>物流管理</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div>
+                <h5 class="mb-0" id="pageTitle">控制台</h5>
+            </div>
+            <div class="user-info">
+                <span id="currentUserName">管理员</span>
+                <a href="/logout" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> 退出
+                </a>
+            </div>
+        </div>
+
+        <div class="content-area" id="contentArea">
+            <div id="dashboardContent">
+                <div class="page-header">
+                    <h5>数据概览</h5>
+                </div>
+                <div class="dashboard-cards">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-primary">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="userCount">0</h3>
+                            <p>用户总数</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="productCount">0</h3>
+                            <p>商品总数</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-warning">
+                            <i class="bi bi-receipt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="orderCount">0</h3>
+                            <p>订单总数</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-info">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="billAmount">¥0</h3>
+                            <p>账单总额</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="userContent" style="display:none;">
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <h5>用户管理</h5>
+                    <button class="btn btn-primary" onclick="showUserModal()">
+                        <i class="bi bi-plus-lg"></i> 添加用户
+                    </button>
+                </div>
+                <div class="search-bar">
+                    <input type="text" class="form-control" id="userSearchName" placeholder="用户名">
+                    <select class="form-select" id="userSearchStatus" style="max-width:150px;">
+                        <option value="">全部状态</option>
+                        <option value="1">启用</option>
+                        <option value="0">停用</option>
+                    </select>
+                    <button class="btn btn-outline-primary" onclick="loadUsers()">搜索</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>真实姓名</th>
+                                <th>手机号</th>
+                                <th>邮箱</th>
+                                <th>角色</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="productContent" style="display:none;">
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <h5>商品管理</h5>
+                    <button class="btn btn-primary" onclick="showProductModal()">
+                        <i class="bi bi-plus-lg"></i> 添加商品
+                    </button>
+                </div>
+                <div class="search-bar">
+                    <input type="text" class="form-control" id="productSearchName" placeholder="商品名称">
+                    <select class="form-select" id="productSearchCategory" style="max-width:150px;">
+                        <option value="">全部分类</option>
+                        <option value="手机">手机</option>
+                        <option value="电脑">电脑</option>
+                        <option value="耳机">耳机</option>
+                        <option value="平板">平板</option>
+                        <option value="手表">手表</option>
+                    </select>
+                    <button class="btn btn-outline-primary" onclick="loadProducts()">搜索</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>图片</th>
+                                <th>商品名称</th>
+                                <th>分类</th>
+                                <th>价格</th>
+                                <th>库存</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="ordersContent" style="display:none;">
+                <div class="page-header">
+                    <h5>订单管理</h5>
+                </div>
+                <div class="search-bar">
+                    <input type="text" class="form-control" id="orderSearchNo" placeholder="订单编号">
+                    <select class="form-select" id="orderSearchStatus" style="max-width:150px;">
+                        <option value="">全部状态</option>
+                        <option value="0">待付款</option>
+                        <option value="1">已付款</option>
+                        <option value="2">已发货</option>
+                        <option value="3">已完成</option>
+                        <option value="4">已关闭</option>
+                    </select>
+                    <button class="btn btn-outline-primary" onclick="loadOrders()">搜索</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>订单编号</th>
+                                <th>用户</th>
+                                <th>总金额</th>
+                                <th>收货人</th>
+                                <th>联系电话</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="billContent" style="display:none;">
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <h5>账单管理</h5>
+                    <button class="btn btn-success" onclick="exportBills()">
+                        <i class="bi bi-download"></i> 导出账单
+                    </button>
+                </div>
+                <div class="search-bar">
+                    <input type="date" class="form-control" id="billStartTime" style="max-width:180px;">
+                    <input type="date" class="form-control" id="billEndTime" style="max-width:180px;">
+                    <select class="form-select" id="billSearchType" style="max-width:150px;">
+                        <option value="">全部类型</option>
+                        <option value="1">收入</option>
+                        <option value="2">支出</option>
+                    </select>
+                    <button class="btn btn-outline-primary" onclick="loadBills()">搜索</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>账单编号</th>
+                                <th>订单编号</th>
+                                <th>用户</th>
+                                <th>金额</th>
+                                <th>类型</th>
+                                <th>支付方式</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="billTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="logisticsContent" style="display:none;">
+                <div class="page-header">
+                    <h5>物流管理</h5>
+                </div>
+                <div class="search-bar">
+                    <input type="text" class="form-control" id="logisticsSearchNo" placeholder="物流单号">
+                    <select class="form-select" id="logisticsSearchStatus" style="max-width:150px;">
+                        <option value="">全部状态</option>
+                        <option value="0">待发货</option>
+                        <option value="1">已发货</option>
+                        <option value="2">运输中</option>
+                        <option value="3">派送中</option>
+                        <option value="4">已签收</option>
+                    </select>
+                    <button class="btn btn-outline-primary" onclick="loadLogistics()">搜索</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>订单编号</th>
+                                <th>物流单号</th>
+                                <th>物流公司</th>
+                                <th>收货人</th>
+                                <th>当前位置</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logisticsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalTitle">添加用户</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        <input type="hidden" id="userId">
+                        <div class="mb-3">
+                            <label class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="userUsername" required>
+                        </div>
+                        <div class="mb-3" id="passwordField">
+                            <label class="form-label">密码</label>
+                            <input type="password" class="form-control" id="userPassword">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">真实姓名</label>
+                            <input type="text" class="form-control" id="userRealName">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">手机号</label>
+                            <input type="text" class="form-control" id="userPhone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" class="form-control" id="userEmail">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">角色</label>
+                            <select class="form-select" id="userRole">
+                                <option value="user">普通用户</option>
+                                <option value="admin">管理员</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUser()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="productModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productModalTitle">添加商品</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm">
+                        <input type="hidden" id="productId">
+                        <div class="mb-3">
+                            <label class="form-label">商品名称</label>
+                            <input type="text" class="form-control" id="productName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">分类</label>
+                            <select class="form-select" id="productCategory">
+                                <option value="手机">手机</option>
+                                <option value="电脑">电脑</option>
+                                <option value="耳机">耳机</option>
+                                <option value="平板">平板</option>
+                                <option value="手表">手表</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">价格</label>
+                            <input type="number" step="0.01" class="form-control" id="productPrice" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">库存</label>
+                            <input type="number" class="form-control" id="productStock" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">商品图片</label>
+                            <input type="file" class="form-control" id="productImage" accept="image/*">
+                            <input type="hidden" id="productImageUrl">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">描述</label>
+                            <textarea class="form-control" id="productDescription" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveProduct()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="logisticsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">更新物流信息</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="logisticsForm">
+                        <input type="hidden" id="logisticsId">
+                        <div class="mb-3">
+                            <label class="form-label">物流单号</label>
+                            <input type="text" class="form-control" id="logisticsNo">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">物流公司</label>
+                            <select class="form-select" id="logisticsCompany">
+                                <option value="顺丰速运">顺丰速运</option>
+                                <option value="中通快递">中通快递</option>
+                                <option value="圆通速递">圆通速递</option>
+                                <option value="韵达快递">韵达快递</option>
+                                <option value="申通快递">申通快递</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">物流状态</label>
+                            <select class="form-select" id="logisticsStatus">
+                                <option value="0">待发货</option>
+                                <option value="1">已发货</option>
+                                <option value="2">运输中</option>
+                                <option value="3">派送中</option>
+                                <option value="4">已签收</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">当前位置</label>
+                            <input type="text" class="form-control" id="currentLocation">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="updateLogistics()">更新</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="orderDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">订单详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="orderDetailBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let userModal, productModal, logisticsModal, orderDetailModal;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            userModal = new bootstrap.Modal(document.getElementById('userModal'));
+            productModal = new bootstrap.Modal(document.getElementById('productModal'));
+            logisticsModal = new bootstrap.Modal(document.getElementById('logisticsModal'));
+            orderDetailModal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
+            
+            loadDashboard();
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function() {
+                    const page = this.getAttribute('data-page');
+                    switchPage(page);
+                });
+            });
+        });
+        
+        function switchPage(page) {
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.querySelector(`.nav-link[data-page="${page}"]`).classList.add('active');
+            
+            document.getElementById('dashboardContent').style.display = 'none';
+            document.getElementById('userContent').style.display = 'none';
+            document.getElementById('productContent').style.display = 'none';
+            document.getElementById('ordersContent').style.display = 'none';
+            document.getElementById('billContent').style.display = 'none';
+            document.getElementById('logisticsContent').style.display = 'none';
+            
+            const titles = {
+                'dashboard': '控制台',
+                'user': '用户管理',
+                'product': '商品管理',
+                'orders': '订单管理',
+                'bill': '账单管理',
+                'logistics': '物流管理'
+            };
+            document.getElementById('pageTitle').textContent = titles[page];
+            
+            document.getElementById(page + 'Content').style.display = 'block';
+            
+            switch(page) {
+                case 'dashboard': loadDashboard(); break;
+                case 'user': loadUsers(); break;
+                case 'product': loadProducts(); break;
+                case 'orders': loadOrders(); break;
+                case 'bill': loadBills(); break;
+                case 'logistics': loadLogistics(); break;
+            }
+        }
+        
+        function loadDashboard() {
+            fetch('/api/user/list').then(r => r.json()).then(d => {
+                document.getElementById('userCount').textContent = d.data ? d.data.length : 0;
+            });
+            fetch('/api/product/list').then(r => r.json()).then(d => {
+                document.getElementById('productCount').textContent = d.data ? d.data.length : 0;
+            });
+            fetch('/api/orders/list').then(r => r.json()).then(d => {
+                document.getElementById('orderCount').textContent = d.data ? d.data.length : 0;
+            });
+            fetch('/api/bill/list').then(r => r.json()).then(d => {
+                let total = 0;
+                if(d.data) {
+                    d.data.forEach(b => total += b.amount || 0);
+                }
+                document.getElementById('billAmount').textContent = '¥' + total.toFixed(2);
+            });
+        }
+        
+        function loadUsers() {
+            const name = document.getElementById('userSearchName').value;
+            const status = document.getElementById('userSearchStatus').value;
+            let url = '/api/user/list?';
+            if(name) url += 'username=' + encodeURIComponent(name) + '&';
+            if(status !== '') url += 'status=' + status;
+            
+            fetch(url).then(r => r.json()).then(d => {
+                const tbody = document.getElementById('userTableBody');
+                tbody.innerHTML = '';
+                if(d.data) {
+                    d.data.forEach(u => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${u.id}</td>
+                                <td>${u.username}</td>
+                                <td>${u.realName || '-'}</td>
+                                <td>${u.phone || '-'}</td>
+                                <td>${u.email || '-'}</td>
+                                <td>${u.role === 'admin' ? '管理员' : '普通用户'}</td>
+                                <td><span class="status-badge ${u.status === 1 ? 'status-active' : 'status-inactive'}">${u.status === 1 ? '启用' : '停用'}</span></td>
+                                <td>${formatDate(u.createTime)}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary btn-action" onclick="editUser(${u.id})">编辑</button>
+                                    <button class="btn btn-sm btn-outline-${u.status === 1 ? 'warning' : 'success'} btn-action" onclick="toggleUserStatus(${u.id}, ${u.status})">${u.status === 1 ? '停用' : '启用'}</button>
+                                    <button class="btn btn-sm btn-outline-danger btn-action" onclick="deleteUser(${u.id})">删除</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            });
+        }
+        
+        function showUserModal(id) {
+            document.getElementById('userForm').reset();
+            document.getElementById('userId').value = '';
+            document.getElementById('userModalTitle').textContent = '添加用户';
+            document.getElementById('passwordField').style.display = 'block';
+            document.getElementById('userPassword').required = true;
+            userModal.show();
+        }
+        
+        function editUser(id) {
+            fetch('/api/user/' + id).then(r => r.json()).then(d => {
+                if(d.data) {
+                    document.getElementById('userId').value = d.data.id;
+                    document.getElementById('userUsername').value = d.data.username;
+                    document.getElementById('userRealName').value = d.data.realName || '';
+                    document.getElementById('userPhone').value = d.data.phone || '';
+                    document.getElementById('userEmail').value = d.data.email || '';
+                    document.getElementById('userRole').value = d.data.role;
+                    document.getElementById('passwordField').style.display = 'none';
+                    document.getElementById('userModalTitle').textContent = '编辑用户';
+                    userModal.show();
+                }
+            });
+        }
+        
+        function saveUser() {
+            const id = document.getElementById('userId').value;
+            const data = {
+                username: document.getElementById('userUsername').value,
+                realName: document.getElementById('userRealName').value,
+                phone: document.getElementById('userPhone').value,
+                email: document.getElementById('userEmail').value,
+                role: document.getElementById('userRole').value
+            };
+            
+            if(id) {
+                data.id = parseInt(id);
+            } else {
+                data.password = document.getElementById('userPassword').value;
+            }
+            
+            const url = id ? '/api/user/update' : '/api/user/save';
+            fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(d => {
+                alert(d.message);
+                if(d.code === 200) {
+                    userModal.hide();
+                    loadUsers();
+                }
+            });
+        }
+        
+        function toggleUserStatus(id, status) {
+            const newStatus = status === 1 ? 0 : 1;
+            fetch('/api/user/updateStatus?id=' + id + '&status=' + newStatus, {method: 'POST'})
+                .then(r => r.json()).then(d => {
+                    alert(d.message);
+                    if(d.code === 200) loadUsers();
+                });
+        }
+        
+        function deleteUser(id) {
+            if(confirm('确定删除该用户?')) {
+                fetch('/api/user/delete/' + id, {method: 'POST'})
+                    .then(r => r.json()).then(d => {
+                        alert(d.message);
+                        if(d.code === 200) loadUsers();
+                    });
+            }
+        }
+        
+        function loadProducts() {
+            const name = document.getElementById('productSearchName').value;
+            const category = document.getElementById('productSearchCategory').value;
+            let url = '/api/product/list?';
+            if(name) url += 'name=' + encodeURIComponent(name) + '&';
+            if(category) url += 'category=' + encodeURIComponent(category);
+            
+            fetch(url).then(r => r.json()).then(d => {
+                const tbody = document.getElementById('productTableBody');
+                tbody.innerHTML = '';
+                if(d.data) {
+                    d.data.forEach(p => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${p.id}</td>
+                                <td><img src="${p.imageUrl ? '/upload/' + p.imageUrl : 'https://via.placeholder.com/60'}" class="product-img"></td>
+                                <td>${p.name}</td>
+                                <td>${p.category}</td>
+                                <td>¥${p.price}</td>
+                                <td>${p.stock}</td>
+                                <td><span class="status-badge ${p.status === 1 ? 'status-active' : 'status-inactive'}">${p.status === 1 ? '上架' : '下架'}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary btn-action" onclick="editProduct(${p.id})">编辑</button>
+                                    <button class="btn btn-sm btn-outline-danger btn-action" onclick="deleteProduct(${p.id})">删除</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            });
+        }
+        
+        function showProductModal() {
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            document.getElementById('productModalTitle').textContent = '添加商品';
+            productModal.show();
+        }
+        
+        function editProduct(id) {
+            fetch('/api/product/' + id).then(r => r.json()).then(d => {
+                if(d.data) {
+                    document.getElementById('productId').value = d.data.id;
+                    document.getElementById('productName').value = d.data.name;
+                    document.getElementById('productCategory').value = d.data.category;
+                    document.getElementById('productPrice').value = d.data.price;
+                    document.getElementById('productStock').value = d.data.stock;
+                    document.getElementById('productDescription').value = d.data.description || '';
+                    document.getElementById('productImageUrl').value = d.data.imageUrl || '';
+                    document.getElementById('productModalTitle').textContent = '编辑商品';
+                    productModal.show();
+                }
+            });
+        }
+        
+        function saveProduct() {
+            const id = document.getElementById('productId').value;
+            const imageFile = document.getElementById('productImage').files[0];
+            
+            const saveData = (imageUrl) => {
+                const data = {
+                    name: document.getElementById('productName').value,
+                    category: document.getElementById('productCategory').value,
+                    price: parseFloat(document.getElementById('productPrice').value),
+                    stock: parseInt(document.getElementById('productStock').value),
+                    description: document.getElementById('productDescription').value,
+                    status: 1
+                };
+                if(id) data.id = parseInt(id);
+                if(imageUrl) data.imageUrl = imageUrl;
+                else if(document.getElementById('productImageUrl').value) data.imageUrl = document.getElementById('productImageUrl').value;
+                
+                const url = id ? '/api/product/update' : '/api/product/save';
+                fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                }).then(r => r.json()).then(d => {
+                    alert(d.message);
+                    if(d.code === 200) {
+                        productModal.hide();
+                        loadProducts();
+                    }
+                });
+            };
+            
+            if(imageFile) {
+                const formData = new FormData();
+                formData.append('file', imageFile);
+                fetch('/api/product/upload', {
+                    method: 'POST',
+                    body: formData
+                }).then(r => r.json()).then(d => {
+                    if(d.code === 200) {
+                        saveData(d.data);
+                    } else {
+                        alert('图片上传失败');
+                    }
+                });
+            } else {
+                saveData(null);
+            }
+        }
+        
+        function deleteProduct(id) {
+            if(confirm('确定删除该商品?')) {
+                fetch('/api/product/delete/' + id, {method: 'POST'})
+                    .then(r => r.json()).then(d => {
+                        alert(d.message);
+                        if(d.code === 200) loadProducts();
+                    });
+            }
+        }
+        
+        function loadOrders() {
+            const orderNo = document.getElementById('orderSearchNo').value;
+            const status = document.getElementById('orderSearchStatus').value;
+            let url = '/api/orders/list?';
+            if(orderNo) url += 'orderNo=' + encodeURIComponent(orderNo) + '&';
+            if(status !== '') url += 'status=' + status;
+            
+            fetch(url).then(r => r.json()).then(d => {
+                const tbody = document.getElementById('orderTableBody');
+                tbody.innerHTML = '';
+                if(d.data) {
+                    d.data.forEach(o => {
+                        const statusMap = {0: '待付款', 1: '已付款', 2: '已发货', 3: '已完成', 4: '已关闭'};
+                        const statusClass = {0: 'warning', 1: 'info', 2: 'primary', 3: 'success', 4: 'secondary'};
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${o.orderNo}</td>
+                                <td>${o.userName || '-'}</td>
+                                <td>¥${o.totalAmount}</td>
+                                <td>${o.receiverName || '-'}</td>
+                                <td>${o.receiverPhone || '-'}</td>
+                                <td><span class="badge bg-${statusClass[o.status]}">${statusMap[o.status]}</span></td>
+                                <td>${formatDate(o.createTime)}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-info btn-action" onclick="viewOrder(${o.id})">详情</button>
+                                    ${o.status !== 4 ? `<button class="btn btn-sm btn-outline-danger btn-action" onclick="closeOrder(${o.id})">关闭</button>` : ''}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            });
+        }
+        
+        function viewOrder(id) {
+            fetch('/api/orders/' + id).then(r => r.json()).then(d => {
+                if(d.data) {
+                    const o = d.data;
+                    const statusMap = {0: '待付款', 1: '已付款', 2: '已发货', 3: '已完成', 4: '已关闭'};
+                    document.getElementById('orderDetailBody').innerHTML = `
+                        <div class="row mb-3">
+                            <div class="col-md-6"><strong>订单编号：</strong>${o.orderNo}</div>
+                            <div class="col-md-6"><strong>状态：</strong>${statusMap[o.status]}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6"><strong>收货人：</strong>${o.receiverName || '-'}</div>
+                            <div class="col-md-6"><strong>联系电话：</strong>${o.receiverPhone || '-'}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-12"><strong>收货地址：</strong>${o.receiverAddress || '-'}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6"><strong>总金额：</strong>¥${o.totalAmount}</div>
+                            <div class="col-md-6"><strong>创建时间：</strong>${formatDate(o.createTime)}</div>
+                        </div>
+                    `;
+                    orderDetailModal.show();
+                }
+            });
+        }
+        
+        function closeOrder(id) {
+            if(confirm('确定关闭该订单?')) {
+                fetch('/api/orders/close/' + id, {method: 'POST'})
+                    .then(r => r.json()).then(d => {
+                        alert(d.message);
+                        if(d.code === 200) loadOrders();
+                    });
+            }
+        }
+        
+        function loadBills() {
+            const type = document.getElementById('billSearchType').value;
+            let url = '/api/bill/list?';
+            if(type !== '') url += 'type=' + type;
+            
+            fetch(url).then(r => r.json()).then(d => {
+                const tbody = document.getElementById('billTableBody');
+                tbody.innerHTML = '';
+                if(d.data) {
+                    d.data.forEach(b => {
+                        const paymentMap = {alipay: '支付宝', wechat: '微信', bank: '银行卡'};
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${b.billNo}</td>
+                                <td>${b.orderNo || '-'}</td>
+                                <td>${b.userName || '-'}</td>
+                                <td>¥${b.amount}</td>
+                                <td><span class="badge ${b.type === 1 ? 'bg-success' : 'bg-danger'}">${b.type === 1 ? '收入' : '支出'}</span></td>
+                                <td>${paymentMap[b.paymentMethod] || '-'}</td>
+                                <td><span class="badge ${b.status === 1 ? 'bg-success' : 'bg-warning'}">${b.status === 1 ? '已完成' : '待处理'}</span></td>
+                                <td>${formatDate(b.createTime)}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            });
+        }
+        
+        function exportBills() {
+            const startTime = document.getElementById('billStartTime').value;
+            const endTime = document.getElementById('billEndTime').value;
+            let url = '/api/bill/export?';
+            if(startTime) url += 'startTime=' + startTime + '&';
+            if(endTime) url += 'endTime=' + endTime;
+            window.location.href = url;
+        }
+        
+        function loadLogistics() {
+            const no = document.getElementById('logisticsSearchNo').value;
+            const status = document.getElementById('logisticsSearchStatus').value;
+            let url = '/api/logistics/list?';
+            if(no) url += 'logisticsNo=' + encodeURIComponent(no) + '&';
+            if(status !== '') url += 'status=' + status;
+            
+            fetch(url).then(r => r.json()).then(d => {
+                const tbody = document.getElementById('logisticsTableBody');
+                tbody.innerHTML = '';
+                if(d.data) {
+                    d.data.forEach(l => {
+                        const statusMap = {0: '待发货', 1: '已发货', 2: '运输中', 3: '派送中', 4: '已签收'};
+                        const statusClass = {0: 'secondary', 1: 'info', 2: 'primary', 3: 'warning', 4: 'success'};
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${l.orderNo || '-'}</td>
+                                <td>${l.logisticsNo || '-'}</td>
+                                <td>${l.logisticsCompany || '-'}</td>
+                                <td>${l.receiverName || '-'}</td>
+                                <td>${l.currentLocation || '-'}</td>
+                                <td><span class="badge bg-${statusClass[l.status]}">${statusMap[l.status]}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary btn-action" onclick="showLogisticsModal(${l.id})">更新</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            });
+        }
+        
+        function showLogisticsModal(id) {
+            fetch('/api/logistics/' + id).then(r => r.json()).then(d => {
+                if(d.data) {
+                    document.getElementById('logisticsId').value = d.data.id;
+                    document.getElementById('logisticsNo').value = d.data.logisticsNo || '';
+                    document.getElementById('logisticsCompany').value = d.data.logisticsCompany || '顺丰速运';
+                    document.getElementById('logisticsStatus').value = d.data.status || 0;
+                    document.getElementById('currentLocation').value = d.data.currentLocation || '';
+                    logisticsModal.show();
+                }
+            });
+        }
+        
+        function updateLogistics() {
+            const id = document.getElementById('logisticsId').value;
+            const params = new URLSearchParams();
+            params.append('id', id);
+            params.append('logisticsNo', document.getElementById('logisticsNo').value);
+            params.append('logisticsCompany', document.getElementById('logisticsCompany').value);
+            params.append('status', document.getElementById('logisticsStatus').value);
+            params.append('currentLocation', document.getElementById('currentLocation').value);
+            
+            fetch('/api/logistics/updateInfo', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: params
+            }).then(r => r.json()).then(d => {
+                alert(d.message);
+                if(d.code === 200) {
+                    logisticsModal.hide();
+                    loadLogistics();
+                }
+            });
+        }
+        
+        function formatDate(dateStr) {
+            if(!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.getFullYear() + '-' + 
+                   String(d.getMonth() + 1).padStart(2, '0') + '-' + 
+                   String(d.getDate()).padStart(2, '0') + ' ' + 
+                   String(d.getHours()).padStart(2, '0') + ':' + 
+                   String(d.getMinutes()).padStart(2, '0');
+        }
+    </script>
+</body>
+</html>
