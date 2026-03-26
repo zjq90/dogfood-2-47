@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mall.mapper.OrdersMapper">
+    
+    <resultMap id="BaseResultMap" type="com.mall.entity.Orders">
+        <id column="id" property="id"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="user_id" property="userId"/>
+        <result column="total_amount" property="totalAmount"/>
+        <result column="pay_amount" property="payAmount"/>
+        <result column="status" property="status"/>
+        <result column="receiver_name" property="receiverName"/>
+        <result column="receiver_phone" property="receiverPhone"/>
+        <result column="receiver_address" property="receiverAddress"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="user_name" property="userName"/>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        o.id, o.order_no, o.user_id, o.total_amount, o.pay_amount, o.status, 
+        o.receiver_name, o.receiver_phone, o.receiver_address, o.create_time, o.update_time
+    </sql>
+    
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, u.real_name as user_name
+        FROM orders o
+        LEFT JOIN sys_user u ON o.user_id = u.id
+        WHERE o.id = #{id}
+    </select>
+    
+    <select id="selectByOrderNo" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, u.real_name as user_name
+        FROM orders o
+        LEFT JOIN sys_user u ON o.user_id = u.id
+        WHERE o.order_no = #{orderNo}
+    </select>
+    
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, u.real_name as user_name
+        FROM orders o
+        LEFT JOIN sys_user u ON o.user_id = u.id
+        <where>
+            <if test="orderNo != null and orderNo != ''">
+                AND o.order_no LIKE CONCAT('%', #{orderNo}, '%')
+            </if>
+            <if test="userId != null">
+                AND o.user_id = #{userId}
+            </if>
+            <if test="status != null">
+                AND o.status = #{status}
+            </if>
+            <if test="receiverName != null and receiverName != ''">
+                AND o.receiver_name LIKE CONCAT('%', #{receiverName}, '%')
+            </if>
+        </where>
+        ORDER BY o.create_time DESC
+    </select>
+    
+    <insert id="insert" parameterType="com.mall.entity.Orders" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO orders (order_no, user_id, total_amount, pay_amount, status, receiver_name, receiver_phone, receiver_address)
+        VALUES (#{orderNo}, #{userId}, #{totalAmount}, #{payAmount}, #{status}, #{receiverName}, #{receiverPhone}, #{receiverAddress})
+    </insert>
+    
+    <update id="update" parameterType="com.mall.entity.Orders">
+        UPDATE orders
+        <set>
+            <if test="payAmount != null">pay_amount = #{payAmount},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="receiverName != null">receiver_name = #{receiverName},</if>
+            <if test="receiverPhone != null">receiver_phone = #{receiverPhone},</if>
+            <if test="receiverAddress != null">receiver_address = #{receiverAddress},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <update id="updateStatus">
+        UPDATE orders SET status = #{status} WHERE id = #{id}
+    </update>
+    
+    <delete id="deleteById">
+        DELETE FROM orders WHERE id = #{id}
+    </delete>
+</mapper>
