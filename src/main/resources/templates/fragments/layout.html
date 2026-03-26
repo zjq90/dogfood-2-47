@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' - 商城管理系统'">商城管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary-color: #4e73df;
+            --secondary-color: #858796;
+            --success-color: #1cc88a;
+            --info-color: #36b9cc;
+            --warning-color: #f6c23e;
+            --danger-color: #e74a3b;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fc;
+        }
+        
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+            color: white;
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+        
+        .sidebar .brand {
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar .brand h4 {
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .sidebar .nav-item {
+            padding: 0;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+        
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .topbar {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #e3e6f0;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #2e59d9;
+            border-color: #2653d4;
+        }
+        
+        .table th {
+            border-top: none;
+            font-weight: 600;
+            color: #5a5c69;
+        }
+        
+        .badge {
+            padding: 0.5em 0.75em;
+        }
+        
+        .stat-card {
+            border-left: 0.25rem solid;
+        }
+        
+        .stat-card.primary { border-left-color: var(--primary-color); }
+        .stat-card.success { border-left-color: var(--success-color); }
+        .stat-card.info { border-left-color: var(--info-color); }
+        .stat-card.warning { border-left-color: var(--warning-color); }
+        
+        .dropdown-menu {
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        
+        .form-control:focus {
+            border-color: #bac8f3;
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+        }
+        
+        .page-link {
+            color: var(--primary-color);
+        }
+        
+        .page-item.active .page-link {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .modal-header {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .modal-header .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Fragment -->
+    <div th:fragment="sidebar" class="sidebar">
+        <div class="brand">
+            <h4><i class="bi bi-shop"></i> 商城管理</h4>
+        </div>
+        <nav class="nav flex-column mt-3">
+            <a class="nav-link" href="/dashboard" th:classappend="${activeMenu == 'dashboard'} ? 'active' : ''">
+                <i class="bi bi-speedometer2"></i> 控制台
+            </a>
+            <a class="nav-link" href="/user/list" th:classappend="${activeMenu == 'user'} ? 'active' : ''">
+                <i class="bi bi-people"></i> 用户管理
+            </a>
+            <a class="nav-link" href="/product/list" th:classappend="${activeMenu == 'product'} ? 'active' : ''">
+                <i class="bi bi-box-seam"></i> 商品管理
+            </a>
+            <a class="nav-link" href="/order/list" th:classappend="${activeMenu == 'order'} ? 'active' : ''">
+                <i class="bi bi-cart3"></i> 订单管理
+            </a>
+            <a class="nav-link" href="/bill/list" th:classappend="${activeMenu == 'bill'} ? 'active' : ''">
+                <i class="bi bi-receipt"></i> 账单管理
+            </a>
+            <a class="nav-link" href="/logistics/list" th:classappend="${activeMenu == 'logistics'} ? 'active' : ''">
+                <i class="bi bi-truck"></i> 物流管理
+            </a>
+        </nav>
+    </div>
+    
+    <!-- Topbar Fragment -->
+    <div th:fragment="topbar" class="topbar">
+        <h5 class="m-0" th:text="${pageTitle}">页面标题</h5>
+        <div class="dropdown">
+            <button class="btn btn-link text-dark dropdown-toggle text-decoration-none" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-person-circle"></i> <span th:text="${user?.realName}">管理员</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> 个人资料</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="/logout"><i class="bi bi-box-arrow-right"></i> 退出登录</a></li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Scripts Fragment -->
+    <div th:fragment="scripts">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    </div>
+</body>
+</html>

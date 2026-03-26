@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout :: head('物流管理')"></head>
+<body>
+    <div th:replace="fragments/layout :: sidebar" th:with="activeMenu='logistics'"></div>
+    
+    <div class="main-content">
+        <div th:replace="fragments/layout :: topbar" th:with="pageTitle='物流管理'"></div>
+        
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-truck me-2"></i>物流列表
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchOrderNo" placeholder="订单编号">
+                            <button class="btn btn-outline-secondary" type="button" onclick="loadData()">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" id="searchLogisticsNo" placeholder="物流单号" onkeyup="if(event.keyCode===13)loadData()">
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>订单编号</th>
+                                <th>物流单号</th>
+                                <th>物流公司</th>
+                                <th>物流状态</th>
+                                <th>当前位置</th>
+                                <th>更新时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logisticsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-end" id="pagination">
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 物流详情模态框 -->
+    <div class="modal fade" id="logisticsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">物流详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="logisticsForm">
+                        <input type="hidden" id="logisticsId">
+                        <input type="hidden" id="orderId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">订单编号</label>
+                                    <input type="text" class="form-control" id="orderNo" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">物流单号</label>
+                                    <input type="text" class="form-control" id="logisticsNo">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">物流公司</label>
+                                    <select class="form-select" id="company">
+                                        <option value="">请选择</option>
+                                        <option value="顺丰速运">顺丰速运</option>
+                                        <option value="京东物流">京东物流</option>
+                                        <option value="中通快递">中通快递</option>
+                                        <option value="圆通速递">圆通速递</option>
+                                        <option value="韵达快递">韵达快递</option>
+                                        <option value="申通快递">申通快递</option>
+                                        <option value="EMS">EMS</option>
+                                        <option value="德邦物流">德邦物流</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">物流状态</label>
+                                    <input type="text" class="form-control" id="status" placeholder="如：运输中、已签收">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">当前位置</label>
+                            <input type="text" class="form-control" id="currentLocation" placeholder="如：北京市朝阳区">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">物流详情 (JSON格式)</label>
+                            <textarea class="form-control" id="details" rows="5" placeholder='[{"time":"2024-03-20 10:00","content":"已发货"}]'></textarea>
+                            <div class="form-text">格式示例：[{"time":"2024-03-20 10:00","content":"已发货"}]</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" onclick="saveLogistics()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="fragments/layout :: scripts"></div>
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+        let logisticsModal;
+        
+        $(document).ready(function() {
+            logisticsModal = new bootstrap.Modal(document.getElementById('logisticsModal'));
+            loadData();
+        });
+        
+        function loadData(page = 1) {
+            currentPage = page;
+            const orderNo = $('#searchOrderNo').val();
+            const logisticsNo = $('#searchLogisticsNo').val();
+            
+            $.ajax({
+                url: '/logistics/data',
+                type: 'GET',
+                data: {
+                    orderNo: orderNo,
+                    logisticsNo: logisticsNo,
+                    pageNum: page,
+                    pageSize: pageSize
+                },
+                success: function(res) {
+                    if (res.code === 200) {
+                        renderTable(res.data.list);
+                        renderPagination(res.data);
+                    }
+                }
+            });
+        }
+        
+        function renderTable(data) {
+            let html = '';
+            data.forEach(function(item) {
+                html += `<tr>
+                    <td>${item.id}</td>
+                    <td>${item.orderNo || '-'}</td>
+                    <td>${item.logisticsNo}</td>
+                    <td>${item.company || '-'}</td>
+                    <td>${item.status || '-'}</td>
+                    <td>${item.currentLocation || '-'}</td>
+                    <td>${item.updateTime || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="editLogistics(${item.id})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteLogistics(${item.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            });
+            $('#logisticsTableBody').html(html);
+        }
+        
+        function renderPagination(data) {
+            let html = '';
+            html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="loadData(${currentPage - 1})">上一页</a>
+            </li>`;
+            for (let i = 1; i <= data.totalPages; i++) {
+                html += `<li class="page-item ${currentPage === i ? 'active' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="loadData(${i})">${i}</a>
+                </li>`;
+            }
+            html += `<li class="page-item ${currentPage === data.totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="loadData(${currentPage + 1})">下一页</a>
+            </li>`;
+            $('#pagination').html(html);
+        }
+        
+        function editLogistics(id) {
+            $.ajax({
+                url: '/logistics/detail/' + id,
+                type: 'GET',
+                success: function(res) {
+                    if (res.code === 200) {
+                        const data = res.data;
+                        $('#logisticsId').val(data.id);
+                        $('#orderId').val(data.orderId);
+                        $('#orderNo').val(data.orderNo);
+                        $('#logisticsNo').val(data.logisticsNo);
+                        $('#company').val(data.company);
+                        $('#status').val(data.status);
+                        $('#currentLocation').val(data.currentLocation);
+                        $('#details').val(data.details);
+                        logisticsModal.show();
+                    }
+                }
+            });
+        }
+        
+        function saveLogistics() {
+            const id = $('#logisticsId').val();
+            const data = {
+                id: parseInt(id),
+                orderId: parseInt($('#orderId').val()),
+                logisticsNo: $('#logisticsNo').val(),
+                company: $('#company').val(),
+                status: $('#status').val(),
+                currentLocation: $('#currentLocation').val(),
+                details: $('#details').val()
+            };
+            
+            $.ajax({
+                url: '/logistics/update',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(res) {
+                    if (res.code === 200) {
+                        logisticsModal.hide();
+                        loadData(currentPage);
+                        alert(res.message);
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            });
+        }
+        
+        function deleteLogistics(id) {
+            if (confirm('确定要删除该物流记录吗？')) {
+                $.ajax({
+                    url: '/logistics/delete/' + id,
+                    type: 'POST',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            loadData(currentPage);
+                            alert(res.message);
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
