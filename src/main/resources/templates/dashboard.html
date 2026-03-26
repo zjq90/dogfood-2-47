@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商城管理系统 - 仪表盘</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            background-color: #f5f7fa;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding-top: 20px;
+            z-index: 1000;
+        }
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 20px;
+        }
+        .sidebar-header h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .nav-menu li {
+            margin-bottom: 5px;
+        }
+        .nav-menu li a {
+            display: block;
+            padding: 15px 25px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        .nav-menu li a:hover,
+        .nav-menu li.active a {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: #ffd700;
+        }
+        .nav-menu li a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .main-content {
+            margin-left: 250px;
+            min-height: 100vh;
+        }
+        .top-navbar {
+            background: white;
+            height: 70px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .page-content {
+            padding: 30px;
+        }
+        .stats-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            font-size: 28px;
+            color: white;
+        }
+        .stats-icon.user { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stats-icon.product { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stats-icon.order { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .stats-icon.revenue { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .stats-info h4 {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+        }
+        .stats-info h2 {
+            margin: 5px 0 0 0;
+            font-size: 32px;
+            font-weight: 600;
+            color: #333;
+        }
+        .welcome-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+        .welcome-card h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .welcome-card p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3><i class="fa fa-shopping-cart"></i> 商城管理</h3>
+        </div>
+        <ul class="nav-menu">
+            <li class="active">
+                <a href="/mall/dashboard"><i class="fa fa-dashboard"></i> 仪表盘</a>
+            </li>
+            <li>
+                <a href="/mall/user"><i class="fa fa-users"></i> 用户管理</a>
+            </li>
+            <li>
+                <a href="/mall/product"><i class="fa fa-cubes"></i> 商品管理</a>
+            </li>
+            <li>
+                <a href="/mall/order"><i class="fa fa-shopping-bag"></i> 订单管理</a>
+            </li>
+            <li>
+                <a href="/mall/bill"><i class="fa fa-file-text"></i> 账单管理</a>
+            </li>
+            <li>
+                <a href="/mall/logistics"><i class="fa fa-truck"></i> 物流管理</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="top-navbar">
+            <h4 class="mb-0">欢迎使用商城管理系统</h4>
+            <div class="user-info">
+                <span>管理员</span>
+                <div class="user-avatar">A</div>
+                <a href="/mall/logout" class="btn btn-outline-danger btn-sm">
+                    <i class="fa fa-sign-out"></i> 退出
+                </a>
+            </div>
+        </div>
+
+        <div class="page-content">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon user">
+                            <i class="fa fa-users"></i>
+                        </div>
+                        <div class="stats-info">
+                            <h4>用户总数</h4>
+                            <h2 id="userCount">--</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon product">
+                            <i class="fa fa-cubes"></i>
+                        </div>
+                        <div class="stats-info">
+                            <h4>商品总数</h4>
+                            <h2 id="productCount">--</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon order">
+                            <i class="fa fa-shopping-bag"></i>
+                        </div>
+                        <div class="stats-info">
+                            <h4>订单总数</h4>
+                            <h2 id="orderCount">--</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-icon revenue">
+                            <i class="fa fa-rmb"></i>
+                        </div>
+                        <div class="stats-info">
+                            <h4>本月营收</h4>
+                            <h2 id="revenueCount">--</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="welcome-card mt-4">
+                <h1>欢迎使用商城管理系统！</h1>
+                <p>
+                    本系统提供完整的商城后台管理功能，包括用户管理、商品管理、订单管理、账单管理和物流管理等模块。
+                    您可以通过左侧导航菜单访问各个功能模块，高效地管理您的电商业务。
+                </p>
+                <p class="mb-0">
+                    当前登录用户：<strong>管理员</strong> | 
+                    登录时间：<strong id="currentTime"></strong>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(function() {
+            var now = new Date();
+            $('#currentTime').text(now.toLocaleString());
+            
+            $('#userCount').text('128');
+            $('#productCount').text('56');
+            $('#orderCount').text('892');
+            $('#revenueCount').text('¥125,680');
+        });
+    </script>
+</body>
+</html>

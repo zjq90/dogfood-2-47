@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商城管理系统 - 商品管理</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        body {
+            background-color: #f5f7fa;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding-top: 20px;
+            z-index: 1000;
+        }
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 20px;
+        }
+        .sidebar-header h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .nav-menu li {
+            margin-bottom: 5px;
+        }
+        .nav-menu li a {
+            display: block;
+            padding: 15px 25px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        .nav-menu li a:hover,
+        .nav-menu li.active a {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: #ffd700;
+        }
+        .nav-menu li a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .main-content {
+            margin-left: 250px;
+            min-height: 100vh;
+        }
+        .top-navbar {
+            background: white;
+            height: 70px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .page-content {
+            padding: 30px;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+        .card-header {
+            background: white;
+            border-bottom: 1px solid #eee;
+            padding: 20px;
+            border-radius: 12px 12px 0 0 !important;
+        }
+        .search-form .form-control,
+        .search-form .btn {
+            height: 42px;
+            border-radius: 8px;
+        }
+        .table th,
+        .table td {
+            vertical-align: middle;
+            padding: 15px;
+        }
+        .table th {
+            background: #f8f9fa;
+            border-top: none;
+            font-weight: 600;
+            color: #666;
+        }
+        .table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        .product-img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .badge {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .btn {
+            border-radius: 6px;
+            padding: 6px 15px;
+        }
+        .modal-content {
+            border-radius: 12px;
+            border: none;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+        .modal-header .close {
+            color: white;
+            opacity: 0.8;
+        }
+        .image-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .image-upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .image-upload-area i {
+            font-size: 48px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            display: none;
+            margin-top: 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3><i class="fa fa-shopping-cart"></i> 商城管理</h3>
+        </div>
+        <ul class="nav-menu">
+            <li>
+                <a href="/mall/dashboard"><i class="fa fa-dashboard"></i> 仪表盘</a>
+            </li>
+            <li>
+                <a href="/mall/user"><i class="fa fa-users"></i> 用户管理</a>
+            </li>
+            <li class="active">
+                <a href="/mall/product"><i class="fa fa-cubes"></i> 商品管理</a>
+            </li>
+            <li>
+                <a href="/mall/order"><i class="fa fa-shopping-bag"></i> 订单管理</a>
+            </li>
+            <li>
+                <a href="/mall/bill"><i class="fa fa-file-text"></i> 账单管理</a>
+            </li>
+            <li>
+                <a href="/mall/logistics"><i class="fa fa-truck"></i> 物流管理</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="top-navbar">
+            <h4 class="mb-0">欢迎使用商城管理系统</h4>
+            <div class="user-info">
+                <span>管理员</span>
+                <div class="user-avatar">A</div>
+                <a href="/mall/logout" class="btn btn-outline-danger btn-sm">
+                    <i class="fa fa-sign-out"></i> 退出
+                </a>
+            </div>
+        </div>
+
+        <div class="page-content">
+            <div class="page-header">
+                <h1 class="page-title"><i class="fa fa-cubes"></i> 商品管理</h1>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addModal">
+                    <i class="fa fa-plus"></i> 添加商品
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <form class="form-inline search-form" id="searchForm">
+                        <div class="form-group mr-3">
+                            <input type="text" class="form-control" id="searchName" placeholder="商品名称">
+                        </div>
+                        <div class="form-group mr-3">
+                            <select class="form-control" id="searchCategory">
+                                <option value="">全部分类</option>
+                            </select>
+                        </div>
+                        <div class="form-group mr-3">
+                            <select class="form-control" id="searchStatus">
+                                <option value="">全部状态</option>
+                                <option value="1">上架</option>
+                                <option value="0">下架</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary mr-2">
+                            <i class="fa fa-search"></i> 搜索
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetSearch()">
+                            <i class="fa fa-refresh"></i> 重置
+                        </button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>图片</th>
+                                <th>商品名称</th>
+                                <th>分类</th>
+                                <th>价格</th>
+                                <th>库存</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加商品模态框 -->
+    <div class="modal fade" id="addModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fa fa-plus"></i> 添加商品</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="addForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>商品名称 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>商品分类 <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="categoryId" required>
+                                        <option value="">请选择分类</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>商品价格 <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" class="form-control" name="price" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>原价</label>
+                                    <input type="number" step="0.01" class="form-control" name="originalPrice">
+                                </div>
+                                <div class="form-group">
+                                    <label>库存</label>
+                                    <input type="number" class="form-control" name="stock" value="0">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>商品图片</label>
+                                    <div class="image-upload-area" onclick="$('#addImageInput').click()">
+                                        <i class="fa fa-cloud-upload"></i>
+                                        <p>点击上传图片</p>
+                                        <input type="file" id="addImageInput" accept="image/*" style="display:none" onchange="uploadImage(this, 'add')">
+                                    </div>
+                                    <img id="addImagePreview" class="image-preview" src="" alt="预览">
+                                    <input type="hidden" name="image" id="addImageUrl">
+                                </div>
+                                <div class="form-group">
+                                    <label>状态</label>
+                                    <select class="form-control" name="status">
+                                        <option value="1">上架</option>
+                                        <option value="0">下架</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>商品描述</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="submitAdd()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑商品模态框 -->
+    <div class="modal fade" id="editModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fa fa-edit"></i> 编辑商品</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" name="id">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>商品名称 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>商品分类 <span class="text-danger">*</span></label>
+                                    <select class="form-control" name="categoryId" required>
+                                        <option value="">请选择分类</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>商品价格 <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" class="form-control" name="price" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>原价</label>
+                                    <input type="number" step="0.01" class="form-control" name="originalPrice">
+                                </div>
+                                <div class="form-group">
+                                    <label>库存</label>
+                                    <input type="number" class="form-control" name="stock" value="0">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>商品图片</label>
+                                    <div class="image-upload-area" onclick="$('#editImageInput').click()">
+                                        <i class="fa fa-cloud-upload"></i>
+                                        <p>点击上传图片</p>
+                                        <input type="file" id="editImageInput" accept="image/*" style="display:none" onchange="uploadImage(this, 'edit')">
+                                    </div>
+                                    <img id="editImagePreview" class="image-preview" src="" alt="预览" style="display:block">
+                                    <input type="hidden" name="image" id="editImageUrl">
+                                </div>
+                                <div class="form-group">
+                                    <label>状态</label>
+                                    <select class="form-control" name="status">
+                                        <option value="1">上架</option>
+                                        <option value="0">下架</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>商品描述</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="submitEdit()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(function() {
+            loadCategories();
+            loadProductList();
+            $('#searchForm').on('submit', function(e) {
+                e.preventDefault();
+                loadProductList();
+            });
+        });
+
+        function loadCategories() {
+            $.ajax({
+                url: '/mall/product',
+                type: 'GET',
+                success: function(res) {
+                    // 页面加载后获取分类数据
+                    $.ajax({
+                        url: '/mall/product',
+                        type: 'GET',
+                        success: function(html) {
+                            // 从页面中提取分类数据
+                            $.ajax({
+                                url: '/mall/product',
+                                type: 'GET',
+                                dataType: 'json',
+                                success: function(res) {
+                                    // 实际应该调用分类接口，这里简化处理
+                                    var categories = [
+                                        {id:1, name:'手机数码'},
+                                        {id:2, name:'电脑办公'},
+                                        {id:3, name:'家用电器'},
+                                        {id:4, name:'服装鞋帽'},
+                                        {id:5, name:'食品饮料'}
+                                    ];
+                                    renderCategoryOptions(categories);
+                                },
+                                error: function() {
+                                    var categories = [
+                                        {id:1, name:'手机数码'},
+                                        {id:2, name:'电脑办公'},
+                                        {id:3, name:'家用电器'},
+                                        {id:4, name:'服装鞋帽'},
+                                        {id:5, name:'食品饮料'}
+                                    ];
+                                    renderCategoryOptions(categories);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function renderCategoryOptions(categories) {
+            var html = '<option value="">请选择分类</option>';
+            categories.forEach(function(cat) {
+                html += '<option value="' + cat.id + '">' + cat.name + '</option>';
+            });
+            $('#searchCategory, #addForm [name="categoryId"], #editForm [name="categoryId"]').html(html);
+        }
+
+        function loadProductList() {
+            var name = $('#searchName').val();
+            var categoryId = $('#searchCategory').val();
+            var status = $('#searchStatus').val();
+            
+            $.ajax({
+                url: '/mall/product/list',
+                type: 'GET',
+                data: {
+                    name: name,
+                    categoryId: categoryId,
+                    status: status
+                },
+                success: function(res) {
+                    if (res.code === 200) {
+                        renderProductTable(res.data);
+                    }
+                }
+            });
+        }
+
+        function renderProductTable(products) {
+            var html = '';
+            if (products && products.length > 0) {
+                products.forEach(function(product) {
+                    html += '<tr>';
+                    html += '<td>' + product.id + '</td>';
+                    html += '<td><img src="' + (product.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22%3E%3Crect fill=%22%23ddd%22 width=%2260%22 height=%2260%22/%3E%3Ctext fill=%22%23999%22 x=%2230%22 y=%2235%22 text-anchor=%22middle%22%3E暂无%3C/text%3E%3C/svg%3E') + '" class="product-img"></td>';
+                    html += '<td>' + product.name + '</td>';
+                    html += '<td>' + (product.categoryName || '-') + '</td>';
+                    html += '<td>¥' + product.price + '</td>';
+                    html += '<td>' + product.stock + '</td>';
+                    html += '<td>';
+                    if (product.status === 1) {
+                        html += '<span class="badge badge-success">上架</span>';
+                    } else {
+                        html += '<span class="badge badge-danger">下架</span>';
+                    }
+                    html += '</td>';
+                    html += '<td>' + formatDate(product.createTime) + '</td>';
+                    html += '<td>';
+                    html += '<button class="btn btn-sm btn-info mr-1" onclick="editProduct(' + product.id + ')"><i class="fa fa-edit"></i></button>';
+                    if (product.status === 1) {
+                        html += '<button class="btn btn-sm btn-warning mr-1" onclick="toggleStatus(' + product.id + ', 0)">下架</button>';
+                    } else {
+                        html += '<button class="btn btn-sm btn-success mr-1" onclick="toggleStatus(' + product.id + ', 1)">上架</button>';
+                    }
+                    html += '<button class="btn btn-sm btn-danger" onclick="deleteProduct(' + product.id + ')"><i class="fa fa-trash"></i></button>';
+                    html += '</td>';
+                    html += '</tr>';
+                });
+            } else {
+                html = '<tr><td colspan="9" class="text-center text-muted py-5">暂无数据</td></tr>';
+            }
+            $('#productTableBody').html(html);
+        }
+
+        function uploadImage(input, type) {
+            var file = input.files[0];
+            if (!file) return;
+            
+            // 验证文件大小（不超过10MB）
+            if (file.size > 10 * 1024 * 1024) {
+                alert('文件大小不能超过10MB');
+                return;
+            }
+            
+            // 验证文件类型
+            if (!file.type.startsWith('image/')) {
+                alert('请选择图片文件');
+                return;
+            }
+            
+            var formData = new FormData();
+            formData.append('file', file);
+            $.ajax({
+                url: '/mall/product/upload',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(res) {
+                    if (res.code === 200) {
+                        $('#' + type + 'ImageUrl').val(res.data);
+                        $('#' + type + 'ImagePreview').attr('src', res.data).show();
+                        alert('上传成功');
+                    } else {
+                        alert('上传失败: ' + res.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('上传错误:', xhr.responseText);
+                    alert('上传失败: ' + (xhr.responseText || error || '请检查服务器连接'));
+                }
+            });
+        }
+
+        function submitAdd() {
+            var formData = $('#addForm').serializeArray();
+            var jsonData = {};
+            $.each(formData, function() {
+                jsonData[this.name] = this.value;
+            });
+            $.ajax({
+                url: '/mall/product',
+                type: 'POST',
+                data: JSON.stringify(jsonData),
+                contentType: 'application/json',
+                success: function(res) {
+                    if (res.code === 200) {
+                        alert('添加成功');
+                        $('#addModal').modal('hide');
+                        $('#addForm')[0].reset();
+                        $('#addImagePreview').hide();
+                        loadProductList();
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            });
+        }
+
+        function editProduct(id) {
+            $.ajax({
+                url: '/mall/product/' + id,
+                type: 'GET',
+                success: function(res) {
+                    if (res.code === 200) {
+                        var product = res.data;
+                        $('#editForm [name="id"]').val(product.id);
+                        $('#editForm [name="name"]').val(product.name);
+                        $('#editForm [name="categoryId"]').val(product.categoryId);
+                        $('#editForm [name="price"]').val(product.price);
+                        $('#editForm [name="originalPrice"]').val(product.originalPrice);
+                        $('#editForm [name="stock"]').val(product.stock);
+                        $('#editForm [name="description"]').val(product.description);
+                        $('#editForm [name="status"]').val(product.status);
+                        $('#editForm [name="image"]').val(product.image);
+                        if (product.image) {
+                            $('#editImagePreview').attr('src', product.image).show();
+                        }
+                        $('#editModal').modal('show');
+                    }
+                }
+            });
+        }
+
+        function submitEdit() {
+            var formData = $('#editForm').serializeArray();
+            var jsonData = {};
+            $.each(formData, function() {
+                jsonData[this.name] = this.value;
+            });
+            $.ajax({
+                url: '/mall/product',
+                type: 'PUT',
+                data: JSON.stringify(jsonData),
+                contentType: 'application/json',
+                success: function(res) {
+                    if (res.code === 200) {
+                        alert('更新成功');
+                        $('#editModal').modal('hide');
+                        loadProductList();
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            });
+        }
+
+        function toggleStatus(id, status) {
+            var action = status === 1 ? '上架' : '下架';
+            if (confirm('确定要' + action + '该商品吗？')) {
+                $.ajax({
+                    url: '/mall/product/' + id + '/status',
+                    type: 'PUT',
+                    data: { status: status },
+                    success: function(res) {
+                        if (res.code === 200) {
+                            alert(action + '成功');
+                            loadProductList();
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            }
+        }
+
+        function deleteProduct(id) {
+            if (confirm('确定要删除该商品吗？')) {
+                $.ajax({
+                    url: '/mall/product/' + id,
+                    type: 'DELETE',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            alert('删除成功');
+                            loadProductList();
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            }
+        }
+
+        function resetSearch() {
+            $('#searchName').val('');
+            $('#searchCategory').val('');
+            $('#searchStatus').val('');
+            loadProductList();
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            var date = new Date(dateStr);
+            return date.toLocaleString('zh-CN', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    </script>
+    
+    <!-- 引入jQuery和Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
