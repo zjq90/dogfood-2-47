@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout :: head('账单管理')"></head>
+<body>
+    <div th:replace="fragments/layout :: sidebar" th:with="activeMenu='bill'"></div>
+    
+    <div class="main-content">
+        <div th:replace="fragments/layout :: topbar" th:with="pageTitle='账单管理'"></div>
+        
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-receipt me-2"></i>账单列表</span>
+                <div>
+                    <button class="btn btn-success btn-sm" onclick="exportBills()">
+                        <i class="bi bi-download"></i> 导出Excel
+                    </button>
+                    <button class="btn btn-primary btn-sm ms-2" onclick="openAddModal()">
+                        <i class="bi bi-plus-lg"></i> 新增账单
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-2">
+                        <select class="form-select" id="searchType" onchange="loadData()">
+                            <option value="">全部类型</option>
+                            <option value="1">收入</option>
+                            <option value="2">支出</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" class="form-control" id="startTime" placeholder="开始日期">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" class="form-control" id="endTime" placeholder="结束日期">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-outline-secondary w-100" onclick="loadData()">
+                            <i class="bi bi-search"></i> 搜索
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>账单编号</th>
+                                <th>类型</th>
+                                <th>金额</th>
+                                <th>标题</th>
+                                <th>描述</th>
+                                <th>关联订单</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="billTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-end" id="pagination">
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 新增/编辑账单模态框 -->
+    <div class="modal fade" id="billModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">新增账单</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="billForm">
+                        <input type="hidden" id="billId">
+                        <div class="mb-3">
+                            <label class="form-label">类型 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="type" required>
+                                <option value="1">收入</option>
+                                <option value="2">支出</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">金额 <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="amount" step="0.01" min="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">标题 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">描述</label>
+                            <textarea class="form-control" id="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">状态</label>
+                            <select class="form-select" id="status">
+                                <option value="1">有效</option>
+                                <option value="0">无效</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveBill()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="fragments/layout :: scripts"></div>
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+        let billModal;
+        
+        $(document).ready(function() {
+            billModal = new bootstrap.Modal(document.getElementById('billModal'));
+            loadData();
+        });
+        
+        function loadData(page = 1) {
+            currentPage = page;
+            const type = $('#searchType').val();
+            const startTime = $('#startTime').val();
+            const endTime = $('#endTime').val();
+            
+            $.ajax({
+                url: '/bill/data',
+                type: 'GET',
+                data: {
+                    type: type,
+                    startTime: startTime,
+                    endTime: endTime,
+                    pageNum: page,
+                    pageSize: pageSize
+                },
+                success: function(res) {
+                    if (res.code === 200) {
+                        renderTable(res.data.list);
+                        renderPagination(res.data);
+                    }
+                }
+            });
+        }
+        
+        function renderTable(data) {
+            let html = '';
+            data.forEach(function(item) {
+                const typeBadge = item.type === 1 
+                    ? '<span class="badge bg-success">收入</span>' 
+                    : '<span class="badge bg-danger">支出</span>';
+                const statusBadge = item.status === 1 
+                    ? '<span class="badge bg-success">有效</span>' 
+                    : '<span class="badge bg-secondary">无效</span>';
+                
+                html += `<tr>
+                    <td>${item.billNo}</td>
+                    <td>${typeBadge}</td>
+                    <td>¥ ${item.amount}</td>
+                    <td>${item.title}</td>
+                    <td>${item.description || '-'}</td>
+                    <td>${item.orderNo || '-'}</td>
+                    <td>${statusBadge}</td>
+                    <td>${item.createTime}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="editBill(${item.id})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteBill(${item.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            });
+            $('#billTableBody').html(html);
+        }
+        
+        function renderPagination(data) {
+            let html = '';
+            html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="loadData(${currentPage - 1})">上一页</a>
+            </li>`;
+            for (let i = 1; i <= data.totalPages; i++) {
+                html += `<li class="page-item ${currentPage === i ? 'active' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="loadData(${i})">${i}</a>
+                </li>`;
+            }
+            html += `<li class="page-item ${currentPage === data.totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="loadData(${currentPage + 1})">下一页</a>
+            </li>`;
+            $('#pagination').html(html);
+        }
+        
+        function openAddModal() {
+            $('#modalTitle').text('新增账单');
+            $('#billForm')[0].reset();
+            $('#billId').val('');
+            billModal.show();
+        }
+        
+        function editBill(id) {
+            $('#modalTitle').text('编辑账单');
+            $.ajax({
+                url: '/bill/edit/' + id,
+                type: 'GET',
+                success: function(res) {
+                    if (res.code === 200) {
+                        const data = res.data;
+                        $('#billId').val(data.id);
+                        $('#type').val(data.type);
+                        $('#amount').val(data.amount);
+                        $('#title').val(data.title);
+                        $('#description').val(data.description);
+                        $('#status').val(data.status);
+                        billModal.show();
+                    }
+                }
+            });
+        }
+        
+        function saveBill() {
+            const id = $('#billId').val();
+            const data = {
+                type: parseInt($('#type').val()),
+                amount: parseFloat($('#amount').val()),
+                title: $('#title').val(),
+                description: $('#description').val(),
+                status: parseInt($('#status').val())
+            };
+            
+            const url = id ? '/bill/update' : '/bill/add';
+            if (id) {
+                data.id = parseInt(id);
+            }
+            
+            $.ajax({
+                url: url,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(res) {
+                    if (res.code === 200) {
+                        billModal.hide();
+                        loadData(currentPage);
+                        alert(res.message);
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            });
+        }
+        
+        function deleteBill(id) {
+            if (confirm('确定要删除该账单吗？')) {
+                $.ajax({
+                    url: '/bill/delete/' + id,
+                    type: 'POST',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            loadData(currentPage);
+                            alert(res.message);
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            }
+        }
+        
+        function exportBills() {
+            const type = $('#searchType').val();
+            const startTime = $('#startTime').val();
+            const endTime = $('#endTime').val();
+            
+            let url = '/bill/export?';
+            if (type) url += 'type=' + type + '&';
+            if (startTime) url += 'startTime=' + startTime + '&';
+            if (endTime) url += 'endTime=' + endTime;
+            
+            window.location.href = url;
+        }
+    </script>
+</body>
+</html>

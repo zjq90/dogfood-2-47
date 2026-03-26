@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout :: head('订单管理')"></head>
+<body>
+    <div th:replace="fragments/layout :: sidebar" th:with="activeMenu='order'"></div>
+    
+    <div class="main-content">
+        <div th:replace="fragments/layout :: topbar" th:with="pageTitle='订单管理'"></div>
+        
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-cart3 me-2"></i>订单列表
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchOrderNo" placeholder="订单编号">
+                            <button class="btn btn-outline-secondary" type="button" onclick="loadData()">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="searchStatus" onchange="loadData()">
+                            <option value="">全部状态</option>
+                            <option value="0">待付款</option>
+                            <option value="1">已付款</option>
+                            <option value="2">已发货</option>
+                            <option value="3">已完成</option>
+                            <option value="4">已关闭</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>订单编号</th>
+                                <th>买家</th>
+                                <th>订单金额</th>
+                                <th>实付金额</th>
+                                <th>支付方式</th>
+                                <th>状态</th>
+                                <th>下单时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-end" id="pagination">
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 订单详情模态框 -->
+    <div class="modal fade" id="orderDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">订单详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="orderDetailContent">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 发货模态框 -->
+    <div class="modal fade" id="shipModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">订单发货</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="shipForm">
+                        <input type="hidden" id="shipOrderId">
+                        <div class="mb-3">
+                            <label class="form-label">物流公司 <span class="text-danger">*</span></label>
+                            <select class="form-select" id="logisticsCompany" required>
+                                <option value="">请选择</option>
+                                <option value="顺丰速运">顺丰速运</option>
+                                <option value="京东物流">京东物流</option>
+                                <option value="中通快递">中通快递</option>
+                                <option value="圆通速递">圆通速递</option>
+                                <option value="韵达快递">韵达快递</option>
+                                <option value="申通快递">申通快递</option>
+                                <option value="EMS">EMS</option>
+                                <option value="德邦物流">德邦物流</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">物流单号 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="logisticsNo" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmShip()">确认发货</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="fragments/layout :: scripts"></div>
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+        let orderDetailModal;
+        let shipModal;
+        
+        $(document).ready(function() {
+            orderDetailModal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
+            shipModal = new bootstrap.Modal(document.getElementById('shipModal'));
+            loadData();
+        });
+        
+        function loadData(page = 1) {
+            currentPage = page;
+            const orderNo = $('#searchOrderNo').val();
+            const status = $('#searchStatus').val();
+            
+            $.ajax({
+                url: '/order/data',
+                type: 'GET',
+                data: {
+                    orderNo: orderNo,
+                    status: status,
+                    pageNum: page,
+                    pageSize: pageSize
+                },
+                success: function(res) {
+                    if (res.code === 200) {
+                        renderTable(res.data.list);
+                        renderPagination(res.data);
+                    }
+                }
+            });
+        }
+        
+        function renderTable(data) {
+            let html = '';
+            data.forEach(function(item) {
+                const statusColors = {
+                    0: 'bg-warning',
+                    1: 'bg-info',
+                    2: 'bg-primary',
+                    3: 'bg-success',
+                    4: 'bg-secondary'
+                };
+                const statusTexts = {
+                    0: '待付款',
+                    1: '已付款',
+                    2: '已发货',
+                    3: '已完成',
+                    4: '已关闭'
+                };
+                const statusBadge = `<span class="badge ${statusColors[item.status] || 'bg-secondary'}">${statusTexts[item.status] || '未知'}</span>`;
+                
+                let actions = '';
+                if (item.status === 0 || item.status === 1) {
+                    actions += `<button class="btn btn-sm btn-danger" onclick="closeOrder(${item.id})"><i class="bi bi-x-circle"></i></button> `;
+                }
+                if (item.status === 1) {
+                    actions += `<button class="btn btn-sm btn-success" onclick="openShipModal(${item.id})"><i class="bi bi-truck"></i></button> `;
+                }
+                actions += `<button class="btn btn-sm btn-info" onclick="viewDetail(${item.id})"><i class="bi bi-eye"></i></button>`;
+                
+                html += `<tr>
+                    <td>${item.orderNo}</td>
+                    <td>${item.username}</td>
+                    <td>¥ ${item.totalAmount}</td>
+                    <td>¥ ${item.payAmount}</td>
+                    <td>${item.payTypeText || '-'}</td>
+                    <td>${statusBadge}</td>
+                    <td>${item.createTime}</td>
+                    <td>${actions}</td>
+                </tr>`;
+            });
+            $('#orderTableBody').html(html);
+        }
+        
+        function renderPagination(data) {
+            let html = '';
+            html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="loadData(${currentPage - 1})">上一页</a>
+            </li>`;
+            for (let i = 1; i <= data.totalPages; i++) {
+                html += `<li class="page-item ${currentPage === i ? 'active' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="loadData(${i})">${i}</a>
+                </li>`;
+            }
+            html += `<li class="page-item ${currentPage === data.totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="loadData(${currentPage + 1})">下一页</a>
+            </li>`;
+            $('#pagination').html(html);
+        }
+        
+        function viewDetail(id) {
+            $.ajax({
+                url: '/order/detail/' + id,
+                type: 'GET',
+                success: function(res) {
+                    if (res.code === 200) {
+                        const order = res.data;
+                        let itemsHtml = '';
+                        if (order.items && order.items.length > 0) {
+                            itemsHtml = '<table class="table table-sm"><thead><tr><th>商品</th><th>单价</th><th>数量</th><th>小计</th></tr></thead><tbody>';
+                            order.items.forEach(function(item) {
+                                itemsHtml += `<tr>
+                                    <td>${item.productName}</td>
+                                    <td>¥ ${item.price}</td>
+                                    <td>${item.quantity}</td>
+                                    <td>¥ ${item.totalAmount}</td>
+                                </tr>`;
+                            });
+                            itemsHtml += '</tbody></table>';
+                        }
+                        
+                        const html = `
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>订单编号：</strong>${order.orderNo}</p>
+                                    <p><strong>买家：</strong>${order.username}</p>
+                                    <p><strong>订单金额：</strong>¥ ${order.totalAmount}</p>
+                                    <p><strong>实付金额：</strong>¥ ${order.payAmount}</p>
+                                    <p><strong>支付方式：</strong>${order.payTypeText || '-'}</p>
+                                    <p><strong>订单状态：</strong>${order.statusText}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>收货人：</strong>${order.receiverName || '-'}</p>
+                                    <p><strong>联系电话：</strong>${order.receiverPhone || '-'}</p>
+                                    <p><strong>收货地址：</strong>${order.receiverAddress || '-'}</p>
+                                    <p><strong>物流公司：</strong>${order.logisticsCompany || '-'}</p>
+                                    <p><strong>物流单号：</strong>${order.logisticsNo || '-'}</p>
+                                    <p><strong>订单备注：</strong>${order.remark || '-'}</p>
+                                </div>
+                            </div>
+                            <hr>
+                            <h6>商品明细</h6>
+                            ${itemsHtml}
+                        `;
+                        $('#orderDetailContent').html(html);
+                        orderDetailModal.show();
+                    }
+                }
+            });
+        }
+        
+        function closeOrder(id) {
+            if (confirm('确定要关闭该订单吗？')) {
+                $.ajax({
+                    url: '/order/close/' + id,
+                    type: 'POST',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            loadData(currentPage);
+                            alert(res.message);
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            }
+        }
+        
+        function openShipModal(id) {
+            $('#shipOrderId').val(id);
+            $('#shipForm')[0].reset();
+            shipModal.show();
+        }
+        
+        function confirmShip() {
+            const orderId = $('#shipOrderId').val();
+            const logisticsCompany = $('#logisticsCompany').val();
+            const logisticsNo = $('#logisticsNo').val();
+            
+            if (!logisticsCompany || !logisticsNo) {
+                alert('请填写完整的物流信息');
+                return;
+            }
+            
+            $.ajax({
+                url: '/order/ship',
+                type: 'POST',
+                data: {
+                    id: orderId,
+                    logisticsCompany: logisticsCompany,
+                    logisticsNo: logisticsNo
+                },
+                success: function(res) {
+                    if (res.code === 200) {
+                        shipModal.hide();
+                        loadData(currentPage);
+                        alert(res.message);
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

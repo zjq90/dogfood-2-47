@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout :: head('用户管理')"></head>
+<body>
+    <div th:replace="fragments/layout :: sidebar" th:with="activeMenu='user'"></div>
+    
+    <div class="main-content">
+        <div th:replace="fragments/layout :: topbar" th:with="pageTitle='用户管理'"></div>
+        
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-people me-2"></i>用户列表</span>
+                <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+                    <i class="bi bi-plus-lg"></i> 新增用户
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchKeyword" placeholder="搜索用户名/姓名/手机号">
+                            <button class="btn btn-outline-secondary" type="button" onclick="loadData()">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="searchStatus" onchange="loadData()">
+                            <option value="">全部状态</option>
+                            <option value="1">启用</option>
+                            <option value="0">禁用</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>真实姓名</th>
+                                <th>手机号</th>
+                                <th>邮箱</th>
+                                <th>角色</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-end" id="pagination">
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 新增/编辑用户模态框 -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">新增用户</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        <input type="hidden" id="userId">
+                        <div class="mb-3">
+                            <label class="form-label">用户名</label>
+                            <input type="text" class="form-control" id="username" required>
+                        </div>
+                        <div class="mb-3" id="passwordField">
+                            <label class="form-label">密码</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">真实姓名</label>
+                            <input type="text" class="form-control" id="realName">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">手机号</label>
+                            <input type="tel" class="form-control" id="phone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" class="form-control" id="email">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">角色</label>
+                            <select class="form-select" id="role">
+                                <option value="0">普通用户</option>
+                                <option value="1">管理员</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="statusField" style="display: none;">
+                            <label class="form-label">状态</label>
+                            <select class="form-select" id="status">
+                                <option value="1">启用</option>
+                                <option value="0">禁用</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUser()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="fragments/layout :: scripts"></div>
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+        let userModal;
+        
+        $(document).ready(function() {
+            userModal = new bootstrap.Modal(document.getElementById('userModal'));
+            loadData();
+        });
+        
+        function loadData(page = 1) {
+            currentPage = page;
+            const keyword = $('#searchKeyword').val();
+            const status = $('#searchStatus').val();
+            
+            $.ajax({
+                url: '/user/data',
+                type: 'GET',
+                data: {
+                    keyword: keyword,
+                    status: status,
+                    pageNum: page,
+                    pageSize: pageSize
+                },
+                success: function(res) {
+                    if (res.code === 200) {
+                        renderTable(res.data.list);
+                        renderPagination(res.data);
+                    }
+                }
+            });
+        }
+        
+        function renderTable(data) {
+            let html = '';
+            data.forEach(function(item) {
+                const statusBadge = item.status === 1 
+                    ? '<span class="badge bg-success">启用</span>' 
+                    : '<span class="badge bg-danger">禁用</span>';
+                const roleText = item.role === 1 ? '管理员' : '普通用户';
+                
+                html += `<tr>
+                    <td>${item.id}</td>
+                    <td>${item.username}</td>
+                    <td>${item.realName || '-'}</td>
+                    <td>${item.phone || '-'}</td>
+                    <td>${item.email || '-'}</td>
+                    <td>${roleText}</td>
+                    <td>${statusBadge}</td>
+                    <td>${item.createTime}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="editUser(${item.id})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-warning" onclick="toggleStatus(${item.id}, ${item.status === 1 ? 0 : 1})">
+                            <i class="bi bi-${item.status === 1 ? 'lock' : 'unlock'}"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteUser(${item.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            });
+            $('#userTableBody').html(html);
+        }
+        
+        function renderPagination(data) {
+            let html = '';
+            
+            html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="loadData(${currentPage - 1})">上一页</a>
+            </li>`;
+            
+            for (let i = 1; i <= data.totalPages; i++) {
+                html += `<li class="page-item ${currentPage === i ? 'active' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="loadData(${i})">${i}</a>
+                </li>`;
+            }
+            
+            html += `<li class="page-item ${currentPage === data.totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="loadData(${currentPage + 1})">下一页</a>
+            </li>`;
+            
+            $('#pagination').html(html);
+        }
+        
+        function openAddModal() {
+            $('#modalTitle').text('新增用户');
+            $('#userForm')[0].reset();
+            $('#userId').val('');
+            $('#passwordField').show();
+            $('#password').prop('required', true);
+            $('#statusField').hide();
+            $('#status').val('1');
+            userModal.show();
+        }
+        
+        function editUser(id) {
+            $('#modalTitle').text('编辑用户');
+            $('#passwordField').hide();
+            $('#password').prop('required', false);
+            $('#statusField').show();
+            
+            $.ajax({
+                url: '/user/detail/' + id,
+                type: 'GET',
+                success: function(res) {
+                    if (res.code === 200) {
+                        const data = res.data;
+                        $('#userId').val(data.id);
+                        $('#username').val(data.username);
+                        $('#realName').val(data.realName);
+                        $('#phone').val(data.phone);
+                        $('#email').val(data.email);
+                        $('#role').val(data.role);
+                        $('#status').val(data.status);
+                        userModal.show();
+                    }
+                }
+            });
+        }
+        
+        function saveUser() {
+            const id = $('#userId').val();
+            const data = {
+                username: $('#username').val(),
+                password: $('#password').val(),
+                realName: $('#realName').val(),
+                phone: $('#phone').val(),
+                email: $('#email').val(),
+                role: parseInt($('#role').val()),
+                status: parseInt($('#status').val())
+            };
+            
+            const url = id ? '/user/update' : '/user/add';
+            if (id) {
+                data.id = parseInt(id);
+                delete data.password;
+            }
+            
+            $.ajax({
+                url: url,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(res) {
+                    if (res.code === 200) {
+                        userModal.hide();
+                        loadData(currentPage);
+                        alert(res.message);
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            });
+        }
+        
+        function toggleStatus(id, status) {
+            if (confirm(status === 1 ? '确定要启用该用户吗？' : '确定要禁用该用户吗？')) {
+                $.ajax({
+                    url: '/user/updateStatus',
+                    type: 'POST',
+                    data: { id: id, status: status },
+                    success: function(res) {
+                        if (res.code === 200) {
+                            loadData(currentPage);
+                            alert(res.message);
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            }
+        }
+        
+        function deleteUser(id) {
+            if (confirm('确定要删除该用户吗？此操作不可恢复！')) {
+                $.ajax({
+                    url: '/user/delete/' + id,
+                    type: 'POST',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            loadData(currentPage);
+                            alert(res.message);
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

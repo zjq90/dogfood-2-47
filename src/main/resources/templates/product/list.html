@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout :: head('商品管理')"></head>
+<body>
+    <div th:replace="fragments/layout :: sidebar" th:with="activeMenu='product'"></div>
+    
+    <div class="main-content">
+        <div th:replace="fragments/layout :: topbar" th:with="pageTitle='商品管理'"></div>
+        
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-box-seam me-2"></i>商品列表</span>
+                <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+                    <i class="bi bi-plus-lg"></i> 新增商品
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" id="searchName" placeholder="商品名称" onkeyup="if(event.keyCode===13)loadData()">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="searchCategory" onchange="loadData()">
+                            <option value="">全部分类</option>
+                            <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" id="searchStatus" onchange="loadData()">
+                            <option value="">全部状态</option>
+                            <option value="1">上架</option>
+                            <option value="0">下架</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-outline-secondary w-100" onclick="loadData()">
+                            <i class="bi bi-search"></i> 搜索
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>图片</th>
+                                <th>商品名称</th>
+                                <th>分类</th>
+                                <th>售价</th>
+                                <th>库存</th>
+                                <th>销量</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-end" id="pagination">
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 新增/编辑商品模态框 -->
+    <div class="modal fade" id="productModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">新增商品</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm">
+                        <input type="hidden" id="productId">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label class="form-label">商品名称 <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">商品分类 <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="categoryId" required>
+                                        <option value="">请选择分类</option>
+                                        <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                                    </select>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">售价 <span class="text-danger">*</span></label>
+                                            <input type="number" class="form-control" id="price" step="0.01" min="0" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">原价</label>
+                                            <input type="number" class="form-control" id="originalPrice" step="0.01" min="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">库存</label>
+                                            <input type="number" class="form-control" id="stock" min="0" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">状态</label>
+                                            <select class="form-select" id="status">
+                                                <option value="1">上架</option>
+                                                <option value="0">下架</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">商品图片</label>
+                                    <div class="border rounded p-3 text-center" style="min-height: 200px;">
+                                        <img id="previewImage" src="" class="img-fluid mb-2" style="max-height: 150px; display: none;">
+                                        <div id="uploadArea">
+                                            <i class="bi bi-cloud-upload fs-1 text-muted"></i>
+                                            <p class="text-muted small">点击上传图片</p>
+                                        </div>
+                                        <input type="file" id="imageFile" class="d-none" accept="image/*" onchange="uploadImage()">
+                                        <input type="hidden" id="mainImage">
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm w-100 mt-2" onclick="$('#imageFile').click()">
+                                        <i class="bi bi-upload"></i> 选择图片
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">商品描述</label>
+                            <textarea class="form-control" id="description" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="saveProduct()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="fragments/layout :: scripts"></div>
+    <script th:inline="javascript">
+        let currentPage = 1;
+        const pageSize = 10;
+        let productModal;
+        
+        $(document).ready(function() {
+            productModal = new bootstrap.Modal(document.getElementById('productModal'));
+            loadData();
+            
+            $('#uploadArea').click(function() {
+                $('#imageFile').click();
+            });
+        });
+        
+        function loadData(page = 1) {
+            currentPage = page;
+            const name = $('#searchName').val();
+            const categoryId = $('#searchCategory').val();
+            const status = $('#searchStatus').val();
+            
+            $.ajax({
+                url: '/product/data',
+                type: 'GET',
+                data: {
+                    name: name,
+                    categoryId: categoryId,
+                    status: status,
+                    pageNum: page,
+                    pageSize: pageSize
+                },
+                success: function(res) {
+                    if (res.code === 200) {
+                        renderTable(res.data.list);
+                        renderPagination(res.data);
+                    }
+                }
+            });
+        }
+        
+        function renderTable(data) {
+            let html = '';
+            data.forEach(function(item) {
+                const statusBadge = item.status === 1 
+                    ? '<span class="badge bg-success">上架</span>' 
+                    : '<span class="badge bg-secondary">下架</span>';
+                const imageHtml = item.mainImage 
+                    ? `<img src="${item.mainImage}" style="width: 50px; height: 50px; object-fit: cover;" class="rounded">`
+                    : '<div class="bg-light rounded" style="width: 50px; height: 50px;"></div>';
+                
+                html += `<tr>
+                    <td>${item.id}</td>
+                    <td>${imageHtml}</td>
+                    <td>${item.name}</td>
+                    <td>${item.categoryName || '-'}</td>
+                    <td>¥ ${item.price}</td>
+                    <td>${item.stock}</td>
+                    <td>${item.sales}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="editProduct(${item.id})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-warning" onclick="toggleStatus(${item.id}, ${item.status === 1 ? 0 : 1})">
+                            <i class="bi bi-${item.status === 1 ? 'arrow-down' : 'arrow-up'}"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteProduct(${item.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            });
+            $('#productTableBody').html(html);
+        }
+        
+        function renderPagination(data) {
+            let html = '';
+            html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="loadData(${currentPage - 1})">上一页</a>
+            </li>`;
+            for (let i = 1; i <= data.totalPages; i++) {
+                html += `<li class="page-item ${currentPage === i ? 'active' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="loadData(${i})">${i}</a>
+                </li>`;
+            }
+            html += `<li class="page-item ${currentPage === data.totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="javascript:void(0)" onclick="loadData(${currentPage + 1})">下一页</a>
+            </li>`;
+            $('#pagination').html(html);
+        }
+        
+        function openAddModal() {
+            $('#modalTitle').text('新增商品');
+            $('#productForm')[0].reset();
+            $('#productId').val('');
+            $('#previewImage').hide();
+            $('#uploadArea').show();
+            $('#mainImage').val('');
+            productModal.show();
+        }
+        
+        function editProduct(id) {
+            $('#modalTitle').text('编辑商品');
+            $.ajax({
+                url: '/product/detail/' + id,
+                type: 'GET',
+                success: function(res) {
+                    if (res.code === 200) {
+                        const data = res.data;
+                        $('#productId').val(data.id);
+                        $('#name').val(data.name);
+                        $('#categoryId').val(data.categoryId);
+                        $('#price').val(data.price);
+                        $('#originalPrice').val(data.originalPrice);
+                        $('#stock').val(data.stock);
+                        $('#status').val(data.status);
+                        $('#description').val(data.description);
+                        $('#mainImage').val(data.mainImage);
+                        
+                        if (data.mainImage) {
+                            $('#previewImage').attr('src', data.mainImage).show();
+                            $('#uploadArea').hide();
+                        } else {
+                            $('#previewImage').hide();
+                            $('#uploadArea').show();
+                        }
+                        
+                        productModal.show();
+                    }
+                }
+            });
+        }
+        
+        function uploadImage() {
+            const file = $('#imageFile')[0].files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            $.ajax({
+                url: '/product/upload',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(res) {
+                    if (res.code === 200) {
+                        $('#mainImage').val(res.data);
+                        $('#previewImage').attr('src', res.data).show();
+                        $('#uploadArea').hide();
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            });
+        }
+        
+        function saveProduct() {
+            const id = $('#productId').val();
+            const data = {
+                name: $('#name').val(),
+                categoryId: parseInt($('#categoryId').val()),
+                price: parseFloat($('#price').val()),
+                originalPrice: parseFloat($('#originalPrice').val()) || null,
+                stock: parseInt($('#stock').val()) || 0,
+                status: parseInt($('#status').val()),
+                description: $('#description').val(),
+                mainImage: $('#mainImage').val()
+            };
+            
+            const url = id ? '/product/update' : '/product/add';
+            if (id) {
+                data.id = parseInt(id);
+            }
+            
+            $.ajax({
+                url: url,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(res) {
+                    if (res.code === 200) {
+                        productModal.hide();
+                        loadData(currentPage);
+                        alert(res.message);
+                    } else {
+                        alert(res.message);
+                    }
+                }
+            });
+        }
+        
+        function toggleStatus(id, status) {
+            const msg = status === 1 ? '确定要上架该商品吗？' : '确定要下架该商品吗？';
+            if (confirm(msg)) {
+                $.ajax({
+                    url: '/product/updateStatus',
+                    type: 'POST',
+                    data: { id: id, status: status },
+                    success: function(res) {
+                        if (res.code === 200) {
+                            loadData(currentPage);
+                            alert(res.message);
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            }
+        }
+        
+        function deleteProduct(id) {
+            if (confirm('确定要删除该商品吗？此操作不可恢复！')) {
+                $.ajax({
+                    url: '/product/delete/' + id,
+                    type: 'POST',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            loadData(currentPage);
+                            alert(res.message);
+                        } else {
+                            alert(res.message);
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

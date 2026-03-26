@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mall.mapper.ProductMapper">
+    
+    <resultMap id="BaseResultMap" type="com.mall.entity.Product">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="description" property="description"/>
+        <result column="price" property="price"/>
+        <result column="original_price" property="originalPrice"/>
+        <result column="stock" property="stock"/>
+        <result column="sales" property="sales"/>
+        <result column="main_image" property="mainImage"/>
+        <result column="images" property="images"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="category_name" property="categoryName"/>
+    </resultMap>
+    
+    <sql id="Base_Column_List">
+        p.id, p.name, p.category_id, p.description, p.price, p.original_price, 
+        p.stock, p.sales, p.main_image, p.images, p.status, p.create_time, p.update_time
+    </sql>
+    
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, c.name as category_name
+        FROM product p
+        LEFT JOIN category c ON p.category_id = c.id
+        WHERE p.id = #{id}
+    </select>
+    
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, c.name as category_name
+        FROM product p
+        LEFT JOIN category c ON p.category_id = c.id
+        <where>
+            <if test="name != null and name != ''">
+                AND p.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="categoryId != null">
+                AND p.category_id = #{categoryId}
+            </if>
+            <if test="status != null">
+                AND p.status = #{status}
+            </if>
+        </where>
+        ORDER BY p.create_time DESC
+    </select>
+    
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product (name, category_id, description, price, original_price, 
+                           stock, sales, main_image, images, status)
+        VALUES (#{name}, #{categoryId}, #{description}, #{price}, #{originalPrice},
+                #{stock}, #{sales}, #{mainImage}, #{images}, #{status})
+    </insert>
+    
+    <update id="update">
+        UPDATE product
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="originalPrice != null">original_price = #{originalPrice},</if>
+            <if test="stock != null">stock = #{stock},</if>
+            <if test="sales != null">sales = #{sales},</if>
+            <if test="mainImage != null">main_image = #{mainImage},</if>
+            <if test="images != null">images = #{images},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <update id="updateStatus">
+        UPDATE product SET status = #{status} WHERE id = #{id}
+    </update>
+    
+    <delete id="deleteById">
+        DELETE FROM product WHERE id = #{id}
+    </delete>
+    
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM product
+    </select>
+</mapper>
